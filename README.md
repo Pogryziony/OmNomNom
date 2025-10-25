@@ -20,12 +20,14 @@ A modern recipe management application built with cutting-edge technologies.
 ## 🛠️ Setup Instructions
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Pogryziony/OmNomNom.git
    cd OmNomNom
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
@@ -34,15 +36,19 @@ A modern recipe management application built with cutting-edge technologies.
    - Create a new project at [supabase.com](https://supabase.com)
    - Copy `.env.example` to `.env`
    - Fill in your Supabase credentials:
+
      ```bash
      cp .env.example .env
      ```
+
    - Update the values in `.env` with your Supabase URL and anon key
 
 4. **Run the development server**
+
    ```bash
    npm run dev
    ```
+
    The application will be available at `http://localhost:4321`
 
 ## 📝 Available Scripts
@@ -54,7 +60,7 @@ A modern recipe management application built with cutting-edge technologies.
 
 ## 🏗️ Project Structure
 
-```
+``` md
 /
 ├── public/              # Static assets
 ├── src/
@@ -75,11 +81,13 @@ A modern recipe management application built with cutting-edge technologies.
 To add Shadcn/ui components to your project:
 
 1. Install the Shadcn/ui CLI (when needed):
+
    ```bash
    npx shadcn@latest init
    ```
 
 2. Add components as needed:
+
    ```bash
    npx shadcn@latest add button
    npx shadcn@latest add card
@@ -100,6 +108,7 @@ See `.env.example` for a template.
 The project includes a GitHub Actions workflow that automatically builds and tests the application on every push to `main` or `develop` branches.
 
 For deployment, you can use various platforms:
+
 - **Vercel**: Connect your GitHub repository
 - **Netlify**: Connect your GitHub repository
 - **Cloudflare Pages**: Connect your GitHub repository

@@ -5,23 +5,27 @@ Thank you for considering contributing to OmNomNom! This document provides guide
 ## Development Setup
 
 1. **Fork and clone the repository**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/OmNomNom.git
    cd OmNomNom
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your Supabase credentials
    ```
 
 4. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -36,6 +40,7 @@ Thank you for considering contributing to OmNomNom! This document provides guide
 ## Commit Guidelines
 
 Follow conventional commit format:
+
 - `feat:` New feature
 - `fix:` Bug fix
 - `docs:` Documentation changes
@@ -45,7 +50,8 @@ Follow conventional commit format:
 - `chore:` Maintenance tasks
 
 Example:
-```
+
+``` md
 feat: add recipe card component
 fix: correct type error in Counter component
 docs: update README with deployment instructions
@@ -54,17 +60,20 @@ docs: update README with deployment instructions
 ## Pull Request Process
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feat/your-feature-name
    ```
 
 2. **Make your changes and commit**
+
    ```bash
    git add .
    git commit -m "feat: your feature description"
    ```
 
 3. **Push to your fork**
+
    ```bash
    git push origin feat/your-feature-name
    ```
@@ -79,16 +88,19 @@ docs: update README with deployment instructions
 Before submitting a PR, ensure:
 
 1. **Type checking passes**
+
    ```bash
    npx astro check
    ```
 
 2. **Build succeeds**
+
    ```bash
    npm run build
    ```
 
 3. **No console errors in development**
+
    ```bash
    npm run dev
    # Check browser console for errors
@@ -105,6 +117,7 @@ When adding new dependencies:
 ## Questions?
 
 If you have questions or need help, feel free to:
+
 - Open an issue
 - Start a discussion
 - Reach out to the maintainers

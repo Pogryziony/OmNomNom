@@ -4,7 +4,7 @@ This document describes the structure of the OmNomNom project.
 
 ## Directory Layout
 
-```
+``` md
 OmNomNom/
 ├── .github/
 │   └── workflows/
@@ -63,6 +63,7 @@ Astro uses file-based routing. To add a new page:
 
 1. Create a new `.tsx` file in `src/components/`
 2. Use the component in Astro pages with `client:load` directive:
+
    ```astro
    <MyComponent client:load />
    ```
@@ -70,11 +71,13 @@ Astro uses file-based routing. To add a new page:
 ## Adding Shadcn/ui Components
 
 Run the following command to add components:
+
 ```bash
 npx shadcn@latest add [component-name]
 ```
 
 Example:
+
 ```bash
 npx shadcn@latest add button
 npx shadcn@latest add card
@@ -84,11 +87,13 @@ npx shadcn@latest add form
 ## Environment Variables
 
 Create a `.env` file from the template:
+
 ```bash
 cp .env.example .env
 ```
 
 Required variables:
+
 - `PUBLIC_SUPABASE_URL`: Your Supabase project URL
 - `PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
 
