@@ -69,8 +69,11 @@ A modern recipe management application built with cutting-edge technologies.
 │   ├── lib/            # Utility functions and configurations
 │   ├── pages/          # Astro pages (file-based routing)
 │   └── styles/         # Global styles
+├── supabase/
+│   └── migrations/     # Supabase migration files
 ├── .github/
-│   └── workflows/      # GitHub Actions CI/CD
+│   ├── workflows/      # GitHub Actions CI/CD
+│   └── config.toml     # Supabase config
 ├── astro.config.mjs    # Astro configuration
 ├── tsconfig.json       # TypeScript configuration
 └── package.json        # Project dependencies
