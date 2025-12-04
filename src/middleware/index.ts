@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { defineMiddleware } from 'astro:middleware';
 
-import { supabaseClient } from '../db/supabase.client';
-import { consumeRateLimit } from '../lib/rateLimiter';
-import { logApiRequest, sanitizeHeaders } from '../lib/logger';
+import { supabaseClient } from '@/db/supabase.client';
+import { consumeRateLimit } from '@/lib/rateLimiter';
+import { logApiRequest, sanitizeHeaders } from '@/lib/logger';
 
 type MiddlewareContext = Parameters<ReturnType<typeof defineMiddleware>>[0];
 
@@ -53,10 +53,23 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const clientIp = resolveClientIp(context);
 
   const token = extractBearerToken(context.request.headers.get('authorization'));
-  const isAuthenticated = Boolean(token);
+  let authenticatedUserId: string | undefined;
+
+  if (token) {
+    try {
+      const { data, error } = await context.locals.supabase.auth.getUser(token);
+      if (!error && data.user) {
+        authenticatedUserId = data.user.id;
+      }
+    } catch (error) {
+      console.warn('Rate limiter could not validate token:', error);
+    }
+  }
+
+  const isAuthenticated = Boolean(authenticatedUserId);
   const limit = isAuthenticated ? AUTHENTICATED_LIMIT : ANONYMOUS_LIMIT;
   const key = isAuthenticated
-    ? `user:${token}`
+    ? `user:${authenticatedUserId}`
     : `ip:${clientIp ?? 'unknown'}`;
 
   const rateLimitState = consumeRateLimit(key, limit);
