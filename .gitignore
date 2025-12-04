@@ -29,3 +29,10 @@ pnpm-debug.log*
 *.swp
 *.swo
 *.swn
+
+#docs
+docs/API_DOCUMENTATION.md
+docs/TECHNICAL_DESIGN.md
+docs/WIREFRAMES.md
+docs/DATABASE_SCHEMA.md
+script.js

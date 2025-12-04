@@ -274,7 +274,7 @@ const { data, error } = await supabase
 
 - Workflow defined in `.github/workflows/ci.yml`
 - Triggers on push to `main` and `develop` branches
-- Runs on Ubuntu latest with Node.js 20.x
+- Runs on Ubuntu latest with Node.js 22.21.0
 
 **Pipeline Steps:**
 
@@ -323,7 +323,7 @@ const { data, error } = await supabase
 
 | Technology | Minimum Version | Current Version |
 |------------|----------------|-----------------|
-| Node.js | 20.x | 20.x |
+| Node.js | 20.21.0 | 20.21.0 |
 | npm | 10.x | 10.x |
 | Astro | 5.0 | 5.15.1 |
 | React | 19.0 | 19.2.0 |
@@ -358,5 +358,3 @@ All selected technologies are:
 No experimental or beta technologies are used in this stack to ensure reliability and maintainability for production deployment.
 
 ---
-
-**Document End**

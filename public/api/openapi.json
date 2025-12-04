@@ -1,0 +1,651 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OmNomNom API",
+    "version": "1.0.0",
+    "description": "OpenAPI specification for the OmNomNom recipe management API."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4321",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    { "name": "Recipes" },
+    { "name": "Profiles" },
+    { "name": "Shopping Lists" }
+  ],
+  "paths": {
+    "/api/recipes": {
+      "get": {
+        "tags": ["Recipes"],
+        "summary": "List recipes",
+        "description": "Returns the authenticated user's recipes with pagination.",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["created_at", "title"] } },
+          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of recipes",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedRecipeList" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/AuthError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      },
+      "post": {
+        "tags": ["Recipes"],
+        "summary": "Create recipe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateRecipeCommand" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recipe created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RecipeDTO" } } }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/AuthError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/recipes/{id}": {
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "tags": ["Recipes"],
+        "summary": "Get recipe",
+        "responses": {
+          "200": {
+            "description": "Recipe details",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RecipeDTO" } } }
+          },
+          "401": { "$ref": "#/components/responses/AuthError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        }
+      },
+      "put": {
+        "tags": ["Recipes"],
+        "summary": "Update recipe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateRecipeCommand" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated recipe", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RecipeDTO" } } } },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/AuthError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      },
+      "delete": {
+        "tags": ["Recipes"],
+        "summary": "Delete recipe",
+        "responses": {
+          "200": { "description": "Delete confirmation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteResponse" } } } },
+          "401": { "$ref": "#/components/responses/AuthError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/recipes/{id}/visibility": {
+      "patch": {
+        "tags": ["Recipes"],
+        "summary": "Toggle recipe visibility",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ToggleVisibilityCommand" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Visibility state",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RecipeVisibilityDTO" } } }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/AuthError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/recipes/{id}/scale": {
+      "post": {
+        "tags": ["Recipes"],
+        "summary": "Scale recipe",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ScaleRecipeCommand" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scaled recipe details",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScaledRecipeDTO" } } }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/AuthError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/recipes/public": {
+      "get": {
+        "tags": ["Recipes"],
+        "summary": "List public recipes",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public recipes feed",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedPublicRecipeList" } } }
+          }
+        }
+      }
+    },
+    "/api/profiles/me": {
+      "get": {
+        "tags": ["Profiles"],
+        "summary": "Get current profile",
+        "responses": {
+          "200": { "description": "Profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProfileDTO" } } } },
+          "401": { "$ref": "#/components/responses/AuthError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      },
+      "patch": {
+        "tags": ["Profiles"],
+        "summary": "Update current profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateProfileCommand" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProfileDTO" } } } },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/AuthError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/profiles/{username}": {
+      "get": {
+        "tags": ["Profiles"],
+        "summary": "Get public profile",
+        "parameters": [
+          { "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Public profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicProfileDTO" } } } },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        }
+      }
+    },
+    "/api/shopping-lists": {
+      "get": {
+        "tags": ["Shopping Lists"],
+        "summary": "Get shopping list",
+        "responses": {
+          "200": { "description": "Shopping list with items", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShoppingListDTO" } } } },
+          "401": { "$ref": "#/components/responses/AuthError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/shopping-lists/generate": {
+      "post": {
+        "tags": ["Shopping Lists"],
+        "summary": "Generate shopping list from recipes",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/GenerateShoppingListCommand" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generation result",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GenerateShoppingListResponse" } } }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/AuthError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/shopping-lists/items": {
+      "post": {
+        "tags": ["Shopping Lists"],
+        "summary": "Add shopping list item",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AddShoppingListItemCommand" } }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created item", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShoppingListItemDTO" } } } },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/AuthError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/shopping-lists/items/{id}": {
+      "patch": {
+        "tags": ["Shopping Lists"],
+        "summary": "Update shopping list item",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateShoppingListItemCommand" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated item", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShoppingListItemDTO" } } } },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/AuthError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      },
+      "delete": {
+        "tags": ["Shopping Lists"],
+        "summary": "Delete shopping list item",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deletion result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteResponse" } } } },
+          "401": { "$ref": "#/components/responses/AuthError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/api/shopping-lists/items/checked": {
+      "delete": {
+        "tags": ["Shopping Lists"],
+        "summary": "Clear checked shopping list items",
+        "responses": {
+          "200": { "description": "Cleared items", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClearCheckedItemsResponse" } } } },
+          "401": { "$ref": "#/components/responses/AuthError" }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "ValidationError": {
+        "description": "Validation error",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+      },
+      "AuthError": {
+        "description": "Authentication/authorization error",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+      },
+      "NotFoundError": {
+        "description": "Resource not found",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+      }
+    },
+    "schemas": {
+      "ApiErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "field": { "type": "string" },
+              "details": { "type": "object", "additionalProperties": true }
+            },
+            "required": ["code", "message"]
+          }
+        },
+        "required": ["error"]
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "total_pages": { "type": "integer" }
+        }
+      },
+      "RecipeListItemDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "servings": { "type": "integer" },
+          "prep_time": { "type": "integer", "nullable": true },
+          "cook_time": { "type": "integer", "nullable": true },
+          "image_url": { "type": "string", "nullable": true },
+          "is_public": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "title", "servings", "is_public", "created_at", "updated_at"]
+      },
+      "PaginatedRecipeList": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/RecipeListItemDTO" } },
+          "pagination": { "$ref": "#/components/schemas/PaginationMeta" }
+        }
+      },
+      "PublicProfileDTO": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "display_name": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" },
+          "public_recipe_count": { "type": "integer" }
+        }
+      },
+      "PublicRecipeDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "servings": { "type": "integer" },
+          "prep_time": { "type": "integer", "nullable": true },
+          "cook_time": { "type": "integer", "nullable": true },
+          "image_url": { "type": "string", "nullable": true },
+          "published_at": { "type": "string", "format": "date-time" },
+          "author": { "$ref": "#/components/schemas/PublicProfileDTO" }
+        }
+      },
+      "PaginatedPublicRecipeList": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/PublicRecipeDTO" } },
+          "pagination": { "$ref": "#/components/schemas/PaginationMeta" }
+        }
+      },
+      "IngredientEntity": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "display_name": { "type": "string" },
+          "category": { "type": "string", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RecipeIngredientWithDetails": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "recipe_id": { "type": "string", "format": "uuid" },
+          "ingredient": { "$ref": "#/components/schemas/IngredientEntity" },
+          "quantity": { "type": "number" },
+          "quantity_display": { "type": "string", "nullable": true },
+          "unit": { "type": "string" },
+          "order_index": { "type": "integer" },
+          "notes": { "type": "string", "nullable": true }
+        }
+      },
+      "RecipeDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "instructions": { "type": "string" },
+          "servings": { "type": "integer" },
+          "prep_time": { "type": "integer", "nullable": true },
+          "cook_time": { "type": "integer", "nullable": true },
+          "image_url": { "type": "string", "nullable": true },
+          "is_public": { "type": "boolean" },
+          "published_at": { "type": "string", "nullable": true, "format": "date-time" },
+          "unpublished_at": { "type": "string", "nullable": true, "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "author": { "$ref": "#/components/schemas/PublicProfileDTO" },
+          "ingredients": { "type": "array", "items": { "$ref": "#/components/schemas/RecipeIngredientWithDetails" } }
+        }
+      },
+      "RecipeIngredientInput": {
+        "type": "object",
+        "properties": {
+          "ingredient_name": { "type": "string" },
+          "quantity": { "type": "number" },
+          "quantity_display": { "type": "string", "nullable": true },
+          "unit": { "type": "string" },
+          "order_index": { "type": "integer" },
+          "notes": { "type": "string", "nullable": true }
+        },
+        "required": ["ingredient_name", "unit", "order_index"]
+      },
+      "CreateRecipeCommand": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "instructions": { "type": "string" },
+          "servings": { "type": "integer" },
+          "prep_time": { "type": "integer", "nullable": true },
+          "cook_time": { "type": "integer", "nullable": true },
+          "image_url": { "type": "string", "nullable": true },
+          "ingredients": { "type": "array", "items": { "$ref": "#/components/schemas/RecipeIngredientInput" } }
+        },
+        "required": ["title", "instructions", "servings", "ingredients"]
+      },
+      "UpdateRecipeCommand": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "instructions": { "type": "string" },
+          "servings": { "type": "integer" },
+          "prep_time": { "type": "integer", "nullable": true },
+          "cook_time": { "type": "integer", "nullable": true },
+          "image_url": { "type": "string", "nullable": true },
+          "ingredients": { "type": "array", "items": { "$ref": "#/components/schemas/RecipeIngredientInput" } }
+        }
+      },
+      "RecipeVisibilityDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "is_public": { "type": "boolean" },
+          "published_at": { "type": "string", "format": "date-time", "nullable": true },
+          "unpublished_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "ToggleVisibilityCommand": {
+        "type": "object",
+        "properties": {
+          "is_public": { "type": "boolean" }
+        },
+        "required": ["is_public"]
+      },
+      "ScaleRecipeCommand": {
+        "type": "object",
+        "properties": {
+          "desired_servings": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["desired_servings"]
+      },
+      "ScaledIngredientDTO": {
+        "type": "object",
+        "properties": {
+          "ingredient": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "display_name": { "type": "string" }
+            }
+          },
+          "original_quantity": { "type": "number" },
+          "scaled_quantity": { "type": "number" },
+          "quantity_display": { "type": "string" },
+          "unit": { "type": "string" },
+          "notes": { "type": "string", "nullable": true }
+        }
+      },
+      "ScaledRecipeDTO": {
+        "type": "object",
+        "properties": {
+          "original_servings": { "type": "integer" },
+          "desired_servings": { "type": "integer" },
+          "scaling_factor": { "type": "number" },
+          "scaled_ingredients": { "type": "array", "items": { "$ref": "#/components/schemas/ScaledIngredientDTO" } }
+        }
+      },
+      "ProfileDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "display_name": { "type": "string", "nullable": true },
+          "bio": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "UpdateProfileCommand": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "display_name": { "type": "string", "nullable": true },
+          "bio": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true }
+        }
+      },
+      "ShoppingListItemDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "shopping_list_id": { "type": "string", "format": "uuid" },
+          "source_recipe_id": { "type": "string", "format": "uuid", "nullable": true },
+          "name": { "type": "string" },
+          "quantity": { "type": "number" },
+          "unit": { "type": "string" },
+          "category": { "type": "string", "nullable": true },
+          "is_checked": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ShoppingListDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/ShoppingListItemDTO" } },
+          "grouped_by_category": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ShoppingListItemDTO" }
+            }
+          }
+        }
+      },
+      "AddShoppingListItemCommand": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "quantity": { "type": "number" },
+          "unit": { "type": "string" },
+          "category": { "type": "string", "nullable": true }
+        },
+        "required": ["name", "quantity", "unit"]
+      },
+      "UpdateShoppingListItemCommand": {
+        "type": "object",
+        "properties": {
+          "quantity": { "type": "number" },
+          "is_checked": { "type": "boolean" }
+        }
+      },
+      "GenerateShoppingListCommand": {
+        "type": "object",
+        "properties": {
+          "recipe_ids": { "type": "array", "items": { "type": "string", "format": "uuid" } },
+          "replace_existing": { "type": "boolean" }
+        },
+        "required": ["recipe_ids", "replace_existing"]
+      },
+      "GenerateShoppingListResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "items_added": { "type": "integer" },
+          "items_updated": { "type": "integer" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/ShoppingListItemDTO" } }
+        }
+      },
+      "DeleteResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "id": { "type": "string" }
+        }
+      },
+      "ClearCheckedItemsResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "items_deleted": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
