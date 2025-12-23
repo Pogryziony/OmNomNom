@@ -188,7 +188,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
     // Step 3b: Get public recipe counts for each author
     const recipeCountsPromises = userIds.map(async (userId) => {
       // @ts-ignore - Database types not yet generated from schema
-      const { count, error } = await locals.supabase
+      const { count } = await locals.supabase
         .from('recipes')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
