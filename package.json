@@ -7,6 +7,8 @@
     "dev": "astro dev",
     "dev:local": "astro dev --host 127.0.0.1 --port 4321",
     "build": "astro build",
+    "build:dev": "node scripts/build-and-dev.mjs",
+    "build:preview": "npm run build && npm run preview",
     "preview": "astro preview",
     "test": "vitest run",
     "astro": "astro",
