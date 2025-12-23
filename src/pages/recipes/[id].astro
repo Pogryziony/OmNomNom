@@ -1,0 +1,14 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import RecipeDetail from '../../components/recipes/RecipeDetail';
+
+const { id } = Astro.params;
+---
+
+<Layout title="Recipe - OmNomNom">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <div class="mx-auto max-w-3xl">
+      <RecipeDetail client:load recipeId={id} />
+    </div>
+  </main>
+</Layout>
