@@ -1,0 +1,12 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import RecipeForm from '../../components/recipes/RecipeForm';
+---
+
+<Layout title="New recipe - OmNomNom">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <div class="mx-auto max-w-3xl">
+      <RecipeForm client:load mode="create" />
+    </div>
+  </main>
+</Layout>
