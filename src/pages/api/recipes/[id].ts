@@ -65,6 +65,66 @@ function toTitleCase(str: string): string {
     .join(' ');
 }
 
+async function getOrCreateIngredient(
+  supabase: any,
+  normalizedName: string,
+  displayName: string
+): Promise<IngredientEntity> {
+  // The `ingredients` table is immutable in MVP (no UPDATE policy), so upserts can fail
+  // when they hit an existing row.
+  // @ts-ignore - Database types not yet generated from schema
+  const { data: existing, error: selectError } = await supabase
+    .from('ingredients')
+    .select('*')
+    .eq('name', normalizedName)
+    .maybeSingle() as { data: IngredientEntity | null; error: any };
+
+  if (selectError) {
+    throw new Error(
+      `Failed to look up ingredient "${normalizedName}": ${selectError.message}`
+    );
+  }
+
+  if (existing) {
+    return existing;
+  }
+
+  // @ts-ignore - Database types not yet generated from schema
+  const { data: inserted, error: insertError } = await supabase
+    .from('ingredients')
+    .insert({
+      name: normalizedName,
+      display_name: displayName,
+      category: null,
+    })
+    .select('*')
+    .single() as { data: IngredientEntity | null; error: any };
+
+  if (insertError) {
+    // If we raced another request and hit a uniqueness conflict, fall back to re-select.
+    // @ts-ignore - Database types not yet generated from schema
+    const { data: raced, error: racedSelectError } = await supabase
+      .from('ingredients')
+      .select('*')
+      .eq('name', normalizedName)
+      .maybeSingle() as { data: IngredientEntity | null; error: any };
+
+    if (!racedSelectError && raced) {
+      return raced;
+    }
+
+    throw new Error(
+      `Failed to insert ingredient "${normalizedName}": ${insertError.message}`
+    );
+  }
+
+  if (!inserted) {
+    throw new Error(`No data returned from ingredient insert for "${normalizedName}"`);
+  }
+
+  return inserted;
+}
+
 /**
  * GET /api/recipes/:id
  * 
@@ -75,6 +135,9 @@ function toTitleCase(str: string): string {
 export const GET: APIRoute = async ({ params, request, locals }) => {
   try {
     const { id } = params;
+
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : null;
 
     if (!id) {
       return jsonError(
@@ -103,16 +166,13 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
 
     // Step 2: Check authorization for private recipes
     if (!recipe.is_public) {
-      const authHeader = request.headers.get('authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!token) {
         return jsonError(
           'AUTHENTICATION_ERROR',
           'Authentication required for private recipes',
           401
         );
       }
-
-      const token = authHeader.replace('Bearer ', '');
       const { data: { user }, error: authError } = await locals.supabase.auth.getUser(token);
 
       if (authError || !user) {
@@ -187,26 +247,68 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
 
     // Step 5: Fetch full ingredient details
     const ingredientIds = (recipeIngredients || []).map((ri) => ri.ingredient_id);
-    
-    // @ts-ignore - Database types not yet generated from schema
-    const { data: fullIngredients, error: fullIngredientsError } = await locals.supabase
-      .from('ingredients')
-      .select('*')
-      .in('id', ingredientIds) as { data: IngredientEntity[] | null; error: any };
 
-    if (fullIngredientsError) {
-      console.error('Failed to fetch ingredient details:', fullIngredientsError);
+    let fullIngredients: IngredientEntity[] = [];
+
+    if (ingredientIds.length > 0) {
+      // @ts-ignore - Database types not yet generated from schema
+      const { data, error: fullIngredientsError } = await locals.supabase
+        .from('ingredients')
+        .select('*')
+        .in('id', ingredientIds) as { data: IngredientEntity[] | null; error: any };
+
+      if (fullIngredientsError) {
+        // Anonymous requests may be blocked by RLS from reading `ingredients`. For public recipes,
+        // return the recipe details without ingredient metadata rather than 500.
+        if (!token && recipe.is_public) {
+          console.error('Anonymous ingredient lookup blocked for public recipe:', fullIngredientsError);
+          fullIngredients = [];
+        } else {
+          console.error('Failed to fetch ingredient details:', fullIngredientsError);
+          return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
+        }
+      } else {
+        fullIngredients = data ?? [];
+      }
     }
 
     // Step 6: Build RecipeIngredientWithDetails array
-    const ingredientsWithDetails: RecipeIngredientWithDetails[] = (recipeIngredients || []).map((ri) => {
+    const ingredientsWithDetails: RecipeIngredientWithDetails[] = [];
+
+    for (const ri of recipeIngredients || []) {
       const ingredient = fullIngredients?.find((ing) => ing.id === ri.ingredient_id);
-      
+
       if (!ingredient) {
-        throw new Error(`Ingredient ${ri.ingredient_id} not found`);
+        // For public recipes viewed anonymously, ingredient details may be hidden by RLS.
+        // Return a placeholder ingredient rather than crashing the entire response.
+        if (!token && recipe.is_public) {
+          ingredientsWithDetails.push({
+            id: ri.id,
+            recipe_id: ri.recipe_id,
+            quantity: ri.quantity,
+            quantity_display: ri.quantity_display,
+            unit: ri.unit,
+            order_index: ri.order_index,
+            notes: ri.notes,
+            ingredient: {
+              id: ri.ingredient_id,
+              name: 'unknown',
+              display_name: 'Unknown ingredient',
+              category: null,
+              created_at: new Date(0).toISOString(),
+            },
+          });
+          continue;
+        }
+
+        console.error('Ingredient details missing for recipe:', {
+          recipe_id: id,
+          ingredient_id: ri.ingredient_id,
+        });
+        return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
       }
 
-      return {
+      ingredientsWithDetails.push({
         id: ri.id,
         recipe_id: ri.recipe_id,
         quantity: ri.quantity,
@@ -215,8 +317,8 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
         order_index: ri.order_index,
         notes: ri.notes,
         ingredient,
-      };
-    });
+      });
+    }
 
     // Step 7: Assemble RecipeDTO
     const recipeDTO: RecipeDTO = {
@@ -453,30 +555,12 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
         const normalizedName = normalizeIngredientName(input.ingredient_name);
         const displayName = toTitleCase(input.ingredient_name);
 
-        // @ts-ignore - Database types not yet generated from schema
-        const { data: ingredient, error: ingredientError } = await locals.supabase
-          .from('ingredients')
-          .upsert(
-            {
-              name: normalizedName,
-              display_name: displayName,
-              category: null,
-            },
-            {
-              onConflict: 'name',
-              ignoreDuplicates: false,
-            }
-          )
-          .select('*')
-          .single() as { data: IngredientEntity | null; error: any };
-
-        if (ingredientError || !ingredient) {
-          console.error(`Failed to upsert ingredient "${input.ingredient_name}":`, ingredientError);
-          return jsonError(
-            'INTERNAL_ERROR',
-            'Failed to process ingredients',
-            500
-          );
+        let ingredient: IngredientEntity;
+        try {
+          ingredient = await getOrCreateIngredient(locals.supabase, normalizedName, displayName);
+        } catch (error) {
+          console.error(`Failed to resolve ingredient "${input.ingredient_name}":`, error);
+          return jsonError('INTERNAL_ERROR', 'Failed to process ingredients', 500);
         }
 
         resolvedIngredients.push({
@@ -520,14 +604,20 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
         .select('*')
         .in('id', ingredientIds) as { data: IngredientEntity[] | null; error: any };
 
-      ingredientsWithDetails = newRecipeIngredients.map((ri) => {
+      ingredientsWithDetails = [];
+
+      for (const ri of newRecipeIngredients) {
         const ingredient = fullIngredients?.find((ing) => ing.id === ri.ingredient_id);
-        
+
         if (!ingredient) {
-          throw new Error(`Ingredient ${ri.ingredient_id} not found`);
+          console.error('Ingredient details missing after recipe update:', {
+            recipe_id: id,
+            ingredient_id: ri.ingredient_id,
+          });
+          return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
         }
 
-        return {
+        ingredientsWithDetails.push({
           id: ri.id,
           recipe_id: ri.recipe_id,
           quantity: ri.quantity,
@@ -536,8 +626,8 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
           order_index: ri.order_index,
           notes: ri.notes,
           ingredient,
-        };
-      });
+        });
+      }
     } else {
       // Fetch existing ingredients if not updating
       // @ts-ignore - Database types not yet generated from schema
@@ -559,14 +649,20 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
           .select('*')
           .in('id', ingredientIds) as { data: IngredientEntity[] | null; error: any };
 
-        ingredientsWithDetails = existingIngredients.map((ri) => {
+        ingredientsWithDetails = [];
+
+        for (const ri of existingIngredients) {
           const ingredient = fullIngredients?.find((ing) => ing.id === ri.ingredient_id);
-          
+
           if (!ingredient) {
-            throw new Error(`Ingredient ${ri.ingredient_id} not found`);
+            console.error('Ingredient details missing for existing recipe ingredients:', {
+              recipe_id: id,
+              ingredient_id: ri.ingredient_id,
+            });
+            return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
           }
 
-          return {
+          ingredientsWithDetails.push({
             id: ri.id,
             recipe_id: ri.recipe_id,
             quantity: ri.quantity,
@@ -575,8 +671,8 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
             order_index: ri.order_index,
             notes: ri.notes,
             ingredient,
-          };
-        });
+          });
+        }
       }
     }
 
