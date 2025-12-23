@@ -204,7 +204,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     // Step 5: If replace_existing, clear all items
-    const itemsUpdated = 0;
     if (body.replace_existing) {
       // @ts-ignore - Database types not yet generated from schema
       const { error: deleteError } = await locals.supabase
