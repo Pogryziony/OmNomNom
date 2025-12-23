@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { defineMiddleware } from 'astro:middleware';
 
-import { supabaseClient } from '@/db/supabase.client';
+import { createSupabaseClient, supabaseClient } from '@/db/supabase.client';
 import { consumeRateLimit } from '@/lib/rateLimiter';
 import { logApiRequest, sanitizeHeaders } from '@/lib/logger';
 
@@ -53,6 +53,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const clientIp = resolveClientIp(context);
 
   const token = extractBearerToken(context.request.headers.get('authorization'));
+
+  // Ensure all downstream API handlers run Supabase queries under the JWT,
+  // so Postgres RLS policies based on auth.uid() work for inserts/updates.
+  context.locals.supabase = createSupabaseClient(token ?? undefined);
+
   let authenticatedUserId: string | undefined;
 
   if (token) {

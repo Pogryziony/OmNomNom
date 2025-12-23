@@ -836,15 +836,15 @@ As a logged-in user, I want to check off items on my shopping list as I shop so 
 | US-1.2 | PRD §5.2 | profiles | Supabase Auth | SignupForm |
 | US-1.3 | PRD §3.1 | profiles | Supabase Auth | LoginForm |
 | US-1.4 | PRD §3.1 | - | Supabase Auth | LogoutButton |
-| US-2.1 | PRD §5.3 | recipes, ingredients, recipe_ingredients | /api/recipes/create | RecipeForm, IngredientInput |
+| US-2.1 | PRD §5.3 | recipes, ingredients, recipe_ingredients | /api/recipes (POST) | RecipeForm, IngredientInput |
 | US-2.2 | PRD §5.4 | recipes | None (direct query) | RecipeList, MyRecipeCard |
-| US-2.3 | PRD §5.5 | recipes, recipe_ingredients | /api/recipes/update | RecipeForm |
-| US-2.4 | PRD §5.6 | recipes | /api/recipes/delete | DeleteButton, Dialog |
-| US-3.1 | PRD §5.7, §5.8 | recipes | /api/recipes/toggle-visibility | VisibilityToggle |
+| US-2.3 | PRD §5.5 | recipes, recipe_ingredients | /api/recipes/:id (PUT) | RecipeForm |
+| US-2.4 | PRD §5.6 | recipes | /api/recipes/:id (DELETE) | DeleteButton, Dialog |
+| US-3.1 | PRD §5.7, §5.8 | recipes | /api/recipes/:id/visibility (PATCH) | VisibilityToggle |
 | US-3.2 | PRD §5.9 | recipes | None (direct query) | RecipeCard, SearchBar, TagFilter |
-| US-4.1 | PRD §5.10 | recipes, recipe_ingredients | /api/recipes/scale | RecipeScaler |
-| US-5.1 | PRD §5.11 | shopping_lists, shopping_list_items | /api/shopping-list/generate | RecipeSelector |
-| US-5.2 | PRD §5.12 | shopping_list_items | /api/shopping-list/add-item, toggle-item, delete-item | ShoppingList, ShoppingListItem |
+| US-4.1 | PRD §5.10 | recipes, recipe_ingredients | /api/recipes/:id/scale (POST) | RecipeScaler |
+| US-5.1 | PRD §5.11 | shopping_lists, shopping_list_items | /api/shopping-lists/generate (POST) | RecipeSelector |
+| US-5.2 | PRD §5.12 | shopping_list_items | /api/shopping-lists/items (POST), /api/shopping-lists/items/:id (PATCH/DELETE) | ShoppingList, ShoppingListItem |
 
 ---
 

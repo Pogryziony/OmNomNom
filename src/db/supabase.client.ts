@@ -5,4 +5,20 @@ import type { Database } from './database.types';
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey);
+export function createSupabaseClient(accessToken?: string) {
+	return createClient<Database>(
+		supabaseUrl,
+		supabaseAnonKey,
+		accessToken
+			? {
+					global: {
+						headers: {
+							Authorization: `Bearer ${accessToken}`,
+						},
+					},
+				}
+			: undefined,
+	);
+}
+
+export const supabaseClient = createSupabaseClient();

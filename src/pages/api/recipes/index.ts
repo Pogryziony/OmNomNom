@@ -24,6 +24,8 @@ import type {
   RecipeListItemDTO,
 } from '@/types';
 
+import { getOrCreateIngredient, normalizeIngredientName, toTitleCase } from './_utils';
+
 /**
  * Helper function to create JSON error responses
  */
@@ -273,25 +275,6 @@ function validateCreateRecipe(body: unknown): ValidationResult {
   return { ok: true };
 }
 
-/**
- * Normalizes ingredient name to lowercase and trimmed
- * Used for deduplication in ingredients table
- */
-function normalizeIngredientName(name: string): string {
-  return name.toLowerCase().trim();
-}
-
-/**
- * Converts ingredient name to Title Case for display
- * Example: "fresh basil" -> "Fresh Basil"
- */
-function toTitleCase(str: string): string {
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
 
 /**
  * Resolved ingredient with ID from database
@@ -300,6 +283,8 @@ interface ResolvedIngredient {
   id: string;
   input: RecipeIngredientInput;
 }
+
+
 
 /**
  * Upserts ingredients to master ingredients table
@@ -320,31 +305,7 @@ async function upsertIngredients(
     const normalizedName = normalizeIngredientName(input.ingredient_name);
     const displayName = toTitleCase(input.ingredient_name);
 
-    // Upsert ingredient (insert or return existing)
-    // @ts-ignore - Database types not yet generated from schema
-    const { data, error } = await supabase
-      .from('ingredients')
-      .upsert(
-        {
-          name: normalizedName,
-          display_name: displayName,
-          category: null, // Category will be added post-MVP
-        },
-        {
-          onConflict: 'name',
-          ignoreDuplicates: false,
-        }
-      )
-      .select('*')
-      .single() as { data: IngredientEntity | null; error: any };
-
-    if (error) {
-      throw new Error(`Failed to upsert ingredient "${input.ingredient_name}": ${error.message}`);
-    }
-
-    if (!data) {
-      throw new Error(`No data returned from ingredient upsert for "${input.ingredient_name}"`);
-    }
+    const data = await getOrCreateIngredient(supabase, normalizedName, displayName);
 
     resolved.push({
       id: data.id,
@@ -534,7 +495,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     let body: unknown;
     try {
       body = await request.json();
-    } catch (parseErr) {
+    } catch {
       return jsonError(
         'VALIDATION_ERROR',
         'Invalid JSON in request body',
@@ -694,17 +655,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
       // Use best-effort ingredient data from resolved ingredients
     }
 
-    // Build RecipeIngredientWithDetails array by combining junction records with ingredient details
-    const ingredientsWithDetails: RecipeIngredientWithDetails[] = recipeIngredientsData.map((ri) => {
-      // Find the corresponding ingredient
+    const ingredientsWithDetails: RecipeIngredientWithDetails[] = [];
+
+    for (const ri of recipeIngredientsData) {
       const ingredient = fullIngredients?.find((ing) => ing.id === ri.ingredient_id);
-      const resolved = resolvedIngredients.find((r) => r.id === ri.ingredient_id);
-      
-      if (!ingredient || !resolved) {
-        throw new Error(`Ingredient ${ri.ingredient_id} not found`);
+
+      if (!ingredient) {
+        console.error('Ingredient details missing after recipe create:', {
+          recipe_id: recipe.id,
+          ingredient_id: ri.ingredient_id,
+        });
+        return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
       }
 
-      return {
+      ingredientsWithDetails.push({
         id: ri.id,
         recipe_id: ri.recipe_id,
         quantity: ri.quantity,
@@ -713,8 +677,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
         order_index: ri.order_index,
         notes: ri.notes,
         ingredient,
-      };
-    });
+      });
+    }
 
     const recipeDTO: RecipeDTO = {
       ...recipe,

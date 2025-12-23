@@ -1,6 +1,6 @@
 import { includeIgnoreFile } from "@eslint/compat";
 import eslint from "@eslint/js";
-import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
+import eslintConfigPrettier from "eslint-config-prettier";
 import eslintPluginAstro from "eslint-plugin-astro";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import pluginReact from "eslint-plugin-react";
@@ -56,11 +56,39 @@ const reactConfig = tseslint.config({
   },
 });
 
+const generatedConfig = {
+  ignores: ["src/db/database.types.ts"],
+};
+
+const apiRelaxConfig = tseslint.config({
+  files: ["src/pages/api/**/*.ts"],
+  rules: {
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/array-type": "off",
+  },
+});
+
+const testsRelaxConfig = tseslint.config({
+  files: ["tests/**/*.{ts,tsx}"],
+  rules: {
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/array-type": "off",
+    "@typescript-eslint/consistent-type-definitions": "off",
+  },
+});
+
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
   baseConfig,
   jsxA11yConfig,
   reactConfig,
   eslintPluginAstro.configs["flat/recommended"],
-  eslintPluginPrettier
+  generatedConfig,
+  apiRelaxConfig,
+  testsRelaxConfig,
+  eslintConfigPrettier
 );

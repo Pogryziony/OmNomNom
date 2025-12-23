@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SignupForm from '../components/auth/SignupForm';
+---
+
+<Layout title="Sign up - OmNomNom">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <div class="mx-auto max-w-md">
+      <div class="mb-4">
+        <a class="text-sm text-indigo-600 underline" href="/">← Back</a>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-lg p-8 space-y-6">
+        <h1 class="text-3xl font-bold text-gray-900">Sign up</h1>
+        <SignupForm client:load />
+      </div>
+    </div>
+  </main>
+</Layout>

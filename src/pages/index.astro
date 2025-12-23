@@ -1,52 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Counter from '../components/Counter';
+import PublicFeed from '../components/recipes/PublicFeed';
 ---
 
-<Layout title="Welcome to OmNomNom">
-  <main class="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
-    <div class="max-w-4xl mx-auto text-center space-y-8">
-      <h1 class="text-6xl font-bold text-gray-900">
-        Welcome to <span class="text-indigo-600">OmNomNom</span>
+<Layout title="OmNomNom">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <div class="mx-auto max-w-3xl space-y-6">
+      <h1 class="text-4xl font-bold text-gray-900">
+        OmNomNom <span class="text-indigo-600">Recipes</span>
       </h1>
-      <p class="text-xl text-gray-700">
-        A modern recipe management application built with cutting-edge technologies
-      </p>
-      
-      <div class="bg-white rounded-lg shadow-lg p-8 space-y-4">
-        <h2 class="text-3xl font-semibold text-gray-800">Technology Stack</h2>
-        <ul class="text-left space-y-2 text-gray-700">
-          <li class="flex items-center">
-            <span class="mr-2 text-indigo-600">✓</span>
-            <strong>Frontend:</strong>&nbsp;Astro 5 with React 19
-          </li>
-          <li class="flex items-center">
-            <span class="mr-2 text-indigo-600">✓</span>
-            <strong>Language:</strong>&nbsp;TypeScript 5
-          </li>
-          <li class="flex items-center">
-            <span class="mr-2 text-indigo-600">✓</span>
-            <strong>Styling:</strong>&nbsp;Tailwind CSS 4
-          </li>
-          <li class="flex items-center">
-            <span class="mr-2 text-indigo-600">✓</span>
-            <strong>UI Components:</strong>&nbsp;Shadcn/ui
-          </li>
-          <li class="flex items-center">
-            <span class="mr-2 text-indigo-600">✓</span>
-            <strong>Backend:</strong>&nbsp;Supabase
-          </li>
-          <li class="flex items-center">
-            <span class="mr-2 text-indigo-600">✓</span>
-            <strong>CI/CD:</strong>&nbsp;GitHub Actions
-          </li>
-        </ul>
-      </div>
-
-      <div class="bg-white rounded-lg shadow-lg p-8">
-        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Interactive React Component</h3>
-        <Counter client:load />
-      </div>
+      <PublicFeed client:load />
     </div>
   </main>
 </Layout>

@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import MyRecipes from '../components/recipes/MyRecipes';
+---
+
+<Layout title="Dashboard - OmNomNom">
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <div class="mx-auto max-w-3xl">
+      <MyRecipes client:load />
+    </div>
+  </main>
+</Layout>
