@@ -32,12 +32,18 @@ export function buildCreateRecipeCommand(input: {
   title: string;
   instructions: string;
   servings: number;
+  prep_time?: number | null;
+  image_url?: string;
+  description?: string;
   ingredients: IngredientRowInput[];
 }): CreateRecipeCommand {
   return {
     title: input.title.trim(),
     instructions: input.instructions.trim(),
     servings: input.servings,
+    prep_time: input.prep_time ?? null,
+    image_url: input.image_url?.trim() ? input.image_url.trim() : null,
+    description: input.description?.trim() ? input.description.trim() : null,
     ingredients: buildIngredientInputs(input.ingredients),
   };
 }
@@ -46,12 +52,18 @@ export function recipeDtoToFormValues(recipe: RecipeDTO): {
   title: string;
   instructions: string;
   servings: number;
+  prep_time: string;
+  image_url: string;
+  description: string;
   ingredients: IngredientRowInput[];
 } {
   return {
     title: recipe.title,
     instructions: recipe.instructions,
     servings: recipe.servings,
+    prep_time: recipe.prep_time === null ? '' : String(recipe.prep_time),
+    image_url: recipe.image_url ?? '',
+    description: recipe.description ?? '',
     ingredients: recipe.ingredients.map((ri) => ({
       ingredient_name: ri.ingredient.display_name,
       quantity: String(ri.quantity),

@@ -67,7 +67,7 @@ interface ValidationResult {
  * - servings: required, must be > 0
  * - prep_time: optional, must be >= 0 if provided
  * - cook_time: optional, must be >= 0 if provided
- * - description: optional, max 5000 characters
+ * - description: optional, max 250 characters
  * - ingredients: required, non-empty array
  * - Each ingredient:
  *   - ingredient_name: required, non-empty
@@ -176,10 +176,10 @@ function validateCreateRecipe(body: unknown): ValidationResult {
         field: 'description',
       };
     }
-    if (data.description.length > 5000) {
+    if (data.description.length > 250) {
       return {
         ok: false,
-        message: 'Description cannot exceed 5000 characters',
+        message: 'Description cannot exceed 250 characters',
         field: 'description',
       };
     }

@@ -40,14 +40,18 @@ export default function RecipeForm(props: Props) {
   );
 
   const [title, setTitle] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [description, setDescription] = useState('');
   const [instructions, setInstructions] = useState('');
   const [servings, setServings] = useState(2);
+  const [prepTime, setPrepTime] = useState('');
   const [ingredients, setIngredients] = useState([
     { ingredient_name: '', quantity: '1', unit: '' },
   ]);
 
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'idle' });
   const [submitState, setSubmitState] = useState<'idle' | 'submitting'>('idle');
+  const [uploadState, setUploadState] = useState<'idle' | 'uploading'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const recipeUrl = useMemo(() => {
@@ -77,8 +81,11 @@ export default function RecipeForm(props: Props) {
         if (cancelled) return;
         const values = recipeDtoToFormValues(recipe);
         setTitle(values.title);
+        setImageUrl(values.image_url);
+        setDescription(values.description);
         setInstructions(values.instructions);
         setServings(values.servings);
+        setPrepTime(values.prep_time);
         setIngredients(values.ingredients.length > 0 ? values.ingredients : [{ ingredient_name: '', quantity: '1', unit: '' }]);
         setLoadState({ kind: 'idle' });
       })
@@ -108,6 +115,10 @@ export default function RecipeForm(props: Props) {
     if (!command.title || command.title.trim().length === 0) return 'Title is required.';
     if (!command.instructions || command.instructions.trim().length === 0) return 'Instructions are required.';
     if (!command.servings || command.servings <= 0) return 'Servings must be greater than 0.';
+    if (command.description && command.description.length > 250) return 'Description cannot exceed 250 characters.';
+    if (command.prep_time !== undefined && command.prep_time !== null && command.prep_time < 0) {
+      return 'Preparation time must be 0 or greater.';
+    }
 
     const isMeaningfulQuantity = (value: string) => {
       const trimmed = value.trim();
@@ -158,8 +169,11 @@ export default function RecipeForm(props: Props) {
 
     const command = buildCreateRecipeCommand({
       title,
+      image_url: imageUrl,
+      description,
       instructions,
       servings,
+      prep_time: prepTime.trim().length === 0 ? null : Number.parseInt(prepTime, 10),
       ingredients,
     });
 
@@ -208,14 +222,64 @@ export default function RecipeForm(props: Props) {
     }
   }
 
+  async function uploadImage(file: File): Promise<string> {
+    if (!accessToken) {
+      throw new Error('Login required.');
+    }
+
+    const form = new FormData();
+    form.set('file', file);
+
+    const result = await fetchJson<{ url: string }>('/api/uploads/images', {
+      method: 'POST',
+      headers: {
+        ...makeAuthHeaders(accessToken),
+      },
+      body: form,
+    });
+
+    return result.url;
+  }
+
+  async function onCoverFileSelected(file: File | null) {
+    if (!file) return;
+    setErrorMessage(null);
+    setUploadState('uploading');
+
+    try {
+      const url = await uploadImage(file);
+      setImageUrl(url);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setUploadState('idle');
+    }
+  }
+
+  async function onInstructionFileSelected(file: File | null) {
+    if (!file) return;
+    setErrorMessage(null);
+    setUploadState('uploading');
+
+    try {
+      const url = await uploadImage(file);
+      const snippet = `\n\n![Step photo](${url})\n`;
+      setInstructions((current) => (current.trim().length === 0 ? snippet.trimStart() : `${current}${snippet}`));
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setUploadState('idle');
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="space-x-3 text-sm">
-          <a className="text-indigo-600 underline" href="/">
+          <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/">
             Home
           </a>
-          <a className="text-indigo-600 underline" href="/dashboard">
+          <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/dashboard">
             Dashboard
           </a>
         </div>
@@ -267,6 +331,50 @@ export default function RecipeForm(props: Props) {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700" htmlFor="imageUrl">
+              Photo URL
+            </label>
+            <input
+              id="imageUrl"
+              inputMode="url"
+              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://…"
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <label className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadState === 'uploading' || !accessToken}
+                  onChange={(e) => onCoverFileSelected(e.target.files?.[0] ?? null)}
+                />
+                Upload from disk
+              </label>
+
+              {uploadState === 'uploading' ? <span className="text-sm text-gray-600">Uploading…</span> : null}
+            </div>
+            <p className="mt-1 text-xs text-gray-600">Optional. Used for tiles and the recipe page.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700" htmlFor="description">
+              Description
+            </label>
+            <textarea
+              id="description"
+              rows={6}
+              maxLength={250}
+              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Optional. Max 250 characters."
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700" htmlFor="servings">
               Servings
             </label>
@@ -282,6 +390,21 @@ export default function RecipeForm(props: Props) {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700" htmlFor="prepTime">
+              Preparation time (minutes)
+            </label>
+            <input
+              id="prepTime"
+              type="number"
+              min={0}
+              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              value={prepTime}
+              onChange={(e) => setPrepTime(e.target.value)}
+              placeholder="Optional"
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700" htmlFor="instructions">
               Instructions
             </label>
@@ -293,6 +416,20 @@ export default function RecipeForm(props: Props) {
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
             />
+
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <label className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadState === 'uploading' || !accessToken}
+                  onChange={(e) => onInstructionFileSelected(e.target.files?.[0] ?? null)}
+                />
+                Upload step photo
+              </label>
+              <span className="text-xs text-gray-600">Appends a Markdown image to the instructions.</span>
+            </div>
           </div>
 
           <div className="space-y-3">
