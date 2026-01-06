@@ -349,7 +349,7 @@ export default function RecipeForm(props: Props) {
               {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
               <label 
                 className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60"
-                tabIndex={0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
+                tabIndex={uploadState === 'uploading' || !accessToken ? -1 : 0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && uploadState !== 'uploading' && accessToken) {
                     e.preventDefault();
@@ -435,7 +435,7 @@ export default function RecipeForm(props: Props) {
               {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
               <label 
                 className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60"
-                tabIndex={0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
+                tabIndex={uploadState === 'uploading' || !accessToken ? -1 : 0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && uploadState !== 'uploading' && accessToken) {
                     e.preventDefault();

@@ -71,9 +71,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   // Maximum file size: 10MB
-  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  const MAX_FILE_SIZE_MB = 10;
+  const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
   if (maybeFile.size > MAX_FILE_SIZE) {
-    return json({ error: { message: `File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB` } }, 400);
+    return json({ error: { message: `File size exceeds maximum allowed size of ${MAX_FILE_SIZE_MB}MB` } }, 400);
   }
 
   if (!maybeFile.type.startsWith('image/')) {
