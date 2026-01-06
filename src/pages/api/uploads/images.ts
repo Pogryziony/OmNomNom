@@ -56,7 +56,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
   let form: FormData;
   try {
     form = await request.formData();
-  } catch {
+  } catch (err) {
+    console.error('Failed to parse multipart/form-data in /api/uploads/images', err);
     return json({ error: { message: 'Expected multipart/form-data' } }, 400);
   }
 
@@ -67,6 +68,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   if (maybeFile.size <= 0) {
     return json({ error: { message: 'Empty file' } }, 400);
+  }
+
+  // Maximum file size: 10MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  if (maybeFile.size > MAX_FILE_SIZE) {
+    return json({ error: { message: `File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB` } }, 400);
   }
 
   if (!maybeFile.type.startsWith('image/')) {

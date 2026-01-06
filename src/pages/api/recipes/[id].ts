@@ -734,18 +734,27 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
         if (!bucketId || !objectPath) return null;
 
         return { bucket: bucketId, path: objectPath };
-      } catch {
+      } catch (error) {
+        console.error('Failed to parse Supabase storage URL in extractSupabasePublicObject', {
+          value,
+          supabaseUrl,
+          error,
+        });
         return null;
       }
     };
 
     const extractMarkdownImageUrls = (markdown: string): string[] => {
       const urls: string[] = [];
-      const regex = /!\[[^\]]*\]\(([^)]+)\)/g;
+      // Improved regex that handles escaped brackets and is more robust
+      // Matches: ![alt text](url) or ![alt text](url "title")
+      // Also handles angle brackets: ![alt](<url>)
+      const regex = /!\[(?:[^\]\\]|\\.)*\]\(([^)"\s]+)(?:\s+"[^"]*")?\)/g;
       for (const match of markdown.matchAll(regex)) {
         const raw = match[1]?.trim();
         if (!raw) continue;
-        const clean = raw.replace(/^<|>$/g, '');
+        // Remove surrounding angle brackets if present
+        const clean = raw.replace(/^<(.+)>$/, '$1');
         urls.push(clean);
       }
       return urls;
@@ -783,16 +792,19 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
+    // Step 4: Return success response
+    let message = 'Recipe deleted successfully';
+    
     if (objectPathsToDelete.length > 0) {
       const { error: storageError } = await locals.supabase.storage.from(bucket).remove(objectPathsToDelete);
       if (storageError) {
-        console.warn('Recipe deleted, but failed to delete images from Storage:', storageError);
+        console.error('Recipe deleted, but failed to delete images from Storage:', storageError);
+        message = 'Recipe deleted, but failed to delete some associated images from Storage';
       }
     }
 
-    // Step 4: Return success response
     const response: DeleteResponse = {
-      message: 'Recipe deleted successfully',
+      message,
       id,
     };
 

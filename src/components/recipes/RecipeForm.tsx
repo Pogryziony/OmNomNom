@@ -343,7 +343,17 @@ export default function RecipeForm(props: Props) {
               placeholder="https://…"
             />
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <label className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60">
+              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+              <label 
+                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60"
+                tabIndex={0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && !(uploadState === 'uploading' || !accessToken)) {
+                    e.preventDefault();
+                    e.currentTarget.querySelector('input')?.click();
+                  }
+                }}
+              >
                 <input
                   type="file"
                   accept="image/*"
@@ -418,7 +428,17 @@ export default function RecipeForm(props: Props) {
             />
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <label className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60">
+              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+              <label 
+                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60"
+                tabIndex={0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && !(uploadState === 'uploading' || !accessToken)) {
+                    e.preventDefault();
+                    e.currentTarget.querySelector('input')?.click();
+                  }
+                }}
+              >
                 <input
                   type="file"
                   accept="image/*"
