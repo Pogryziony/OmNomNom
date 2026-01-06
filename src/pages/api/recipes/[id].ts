@@ -808,7 +808,7 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
 
     // Step 4: Return success response
     let message = 'Recipe deleted successfully';
-    
+
     if (objectPathsToDelete.length > 0) {
       const { error: storageError } = await locals.supabase.storage.from(bucket).remove(objectPathsToDelete);
       if (storageError) {
