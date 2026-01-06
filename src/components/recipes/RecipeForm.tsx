@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CreateRecipeCommand, RecipeDTO, UpdateRecipeCommand } from '@/types';
 import { fetchJson, makeAuthHeaders } from '@/lib/http';
 import { buildCreateRecipeCommand, buildIngredientInputs, recipeDtoToFormValues } from '@/lib/recipePayload';
@@ -53,6 +53,9 @@ export default function RecipeForm(props: Props) {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting'>('idle');
   const [uploadState, setUploadState] = useState<'idle' | 'uploading'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+  const instructionFileInputRef = useRef<HTMLInputElement>(null);
 
   const recipeUrl = useMemo(() => {
     if (!props.recipeId) return null;
@@ -343,8 +346,19 @@ export default function RecipeForm(props: Props) {
               placeholder="https://…"
             />
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <label className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60">
+              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+              <label 
+                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60"
+                tabIndex={uploadState === 'uploading' || !accessToken ? -1 : 0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && uploadState !== 'uploading' && accessToken) {
+                    e.preventDefault();
+                    coverFileInputRef.current?.click();
+                  }
+                }}
+              >
                 <input
+                  ref={coverFileInputRef}
                   type="file"
                   accept="image/*"
                   className="hidden"
@@ -418,8 +432,19 @@ export default function RecipeForm(props: Props) {
             />
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <label className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60">
+              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+              <label 
+                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60"
+                tabIndex={uploadState === 'uploading' || !accessToken ? -1 : 0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && uploadState !== 'uploading' && accessToken) {
+                    e.preventDefault();
+                    instructionFileInputRef.current?.click();
+                  }
+                }}
+              >
                 <input
+                  ref={instructionFileInputRef}
                   type="file"
                   accept="image/*"
                   className="hidden"

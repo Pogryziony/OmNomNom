@@ -734,18 +734,41 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
         if (!bucketId || !objectPath) return null;
 
         return { bucket: bucketId, path: objectPath };
-      } catch {
+      } catch (error) {
+        console.error('Failed to parse Supabase storage URL in extractSupabasePublicObject', {
+          value,
+          supabaseUrl,
+          error,
+        });
         return null;
       }
     };
 
     const extractMarkdownImageUrls = (markdown: string): string[] => {
       const urls: string[] = [];
-      const regex = /!\[[^\]]*\]\(([^)]+)\)/g;
+      /**
+       * Regex to extract image URLs from markdown image syntax.
+       * Handles the following edge cases:
+       * - Basic: ![alt](url) → matches "url"
+       * - With title: ![alt](url "title") → matches "url"
+       * - Angle brackets: ![alt](<url>) → matches "<url>" (cleaned below)
+       * - Escaped brackets in alt: ![alt \] text](url) → matches "url"
+       * Pattern breakdown:
+       * - !\[ - literal image start
+       * - (?:[^\]\\]|\\.)* - alt text (matches any char except ] and \, or any escaped char)
+       * - \] - closing bracket
+       * - \( - opening paren
+       * - ([^)"\s]+) - capture group 1: URL (anything except ), ", or whitespace)
+       * - (?:\s+"[^"]*")? - optional title in quotes
+       * - \) - closing paren
+       */
+      const regex = /!\[(?:[^\]\\]|\\.)*\]\(([^)"\s]+)(?:\s+"[^"]*")?\)/g;
       for (const match of markdown.matchAll(regex)) {
         const raw = match[1]?.trim();
         if (!raw) continue;
-        const clean = raw.replace(/^<|>$/g, '');
+        // Remove surrounding angle brackets if present: <url> → url
+        // Use non-greedy pattern to avoid matching nested angle brackets
+        const clean = raw.replace(/^<([^<>]+)>$/, '$1');
         urls.push(clean);
       }
       return urls;
@@ -783,16 +806,19 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
+    // Step 4: Return success response
+    let message = 'Recipe deleted successfully';
+
     if (objectPathsToDelete.length > 0) {
       const { error: storageError } = await locals.supabase.storage.from(bucket).remove(objectPathsToDelete);
       if (storageError) {
-        console.warn('Recipe deleted, but failed to delete images from Storage:', storageError);
+        console.error('Recipe deleted, but failed to delete images from Storage:', storageError);
+        message = 'Recipe deleted, but failed to delete some associated images from Storage';
       }
     }
 
-    // Step 4: Return success response
     const response: DeleteResponse = {
-      message: 'Recipe deleted successfully',
+      message,
       id,
     };
 

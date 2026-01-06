@@ -110,7 +110,7 @@ export default function MyRecipes() {
                       <img
                         src={recipe.image_url}
                         alt={recipe.title}
-                        className="h-full w-full object-contain"
+                        className="h-full w-full object-cover"
                         loading="lazy"
                       />
                     ) : null}
