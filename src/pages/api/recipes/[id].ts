@@ -767,7 +767,8 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
         const raw = match[1]?.trim();
         if (!raw) continue;
         // Remove surrounding angle brackets if present: <url> → url
-        const clean = raw.replace(/^<(.+)>$/, '$1');
+        // Use non-greedy pattern to avoid matching nested angle brackets
+        const clean = raw.replace(/^<([^<>]+)>$/, '$1');
         urls.push(clean);
       }
       return urls;

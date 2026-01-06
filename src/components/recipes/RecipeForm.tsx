@@ -351,7 +351,7 @@ export default function RecipeForm(props: Props) {
                 className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60"
                 tabIndex={0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
                 onKeyDown={(e) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && !(uploadState === 'uploading' || !accessToken)) {
+                  if ((e.key === 'Enter' || e.key === ' ') && uploadState !== 'uploading' && accessToken) {
                     e.preventDefault();
                     coverFileInputRef.current?.click();
                   }
@@ -437,7 +437,7 @@ export default function RecipeForm(props: Props) {
                 className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 cursor-pointer disabled:opacity-60"
                 tabIndex={0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
                 onKeyDown={(e) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && !(uploadState === 'uploading' || !accessToken)) {
+                  if ((e.key === 'Enter' || e.key === ' ') && uploadState !== 'uploading' && accessToken) {
                     e.preventDefault();
                     instructionFileInputRef.current?.click();
                   }
