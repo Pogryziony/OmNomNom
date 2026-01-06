@@ -746,14 +746,27 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
 
     const extractMarkdownImageUrls = (markdown: string): string[] => {
       const urls: string[] = [];
-      // Improved regex that handles escaped brackets and is more robust
-      // Matches: ![alt text](url) or ![alt text](url "title")
-      // Also handles angle brackets: ![alt](<url>)
+      /**
+       * Regex to extract image URLs from markdown image syntax.
+       * Handles the following edge cases:
+       * - Basic: ![alt](url) → matches "url"
+       * - With title: ![alt](url "title") → matches "url"
+       * - Angle brackets: ![alt](<url>) → matches "<url>" (cleaned below)
+       * - Escaped brackets in alt: ![alt \] text](url) → matches "url"
+       * Pattern breakdown:
+       * - !\[ - literal image start
+       * - (?:[^\]\\]|\\.)* - alt text (matches any char except ] and \, or any escaped char)
+       * - \] - closing bracket
+       * - \( - opening paren
+       * - ([^)"\s]+) - capture group 1: URL (anything except ), ", or whitespace)
+       * - (?:\s+"[^"]*")? - optional title in quotes
+       * - \) - closing paren
+       */
       const regex = /!\[(?:[^\]\\]|\\.)*\]\(([^)"\s]+)(?:\s+"[^"]*")?\)/g;
       for (const match of markdown.matchAll(regex)) {
         const raw = match[1]?.trim();
         if (!raw) continue;
-        // Remove surrounding angle brackets if present
+        // Remove surrounding angle brackets if present: <url> → url
         const clean = raw.replace(/^<(.+)>$/, '$1');
         urls.push(clean);
       }

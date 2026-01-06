@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CreateRecipeCommand, RecipeDTO, UpdateRecipeCommand } from '@/types';
 import { fetchJson, makeAuthHeaders } from '@/lib/http';
 import { buildCreateRecipeCommand, buildIngredientInputs, recipeDtoToFormValues } from '@/lib/recipePayload';
@@ -53,6 +53,9 @@ export default function RecipeForm(props: Props) {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting'>('idle');
   const [uploadState, setUploadState] = useState<'idle' | 'uploading'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+  const instructionFileInputRef = useRef<HTMLInputElement>(null);
 
   const recipeUrl = useMemo(() => {
     if (!props.recipeId) return null;
@@ -350,11 +353,12 @@ export default function RecipeForm(props: Props) {
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && !(uploadState === 'uploading' || !accessToken)) {
                     e.preventDefault();
-                    e.currentTarget.querySelector('input')?.click();
+                    coverFileInputRef.current?.click();
                   }
                 }}
               >
                 <input
+                  ref={coverFileInputRef}
                   type="file"
                   accept="image/*"
                   className="hidden"
@@ -435,11 +439,12 @@ export default function RecipeForm(props: Props) {
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && !(uploadState === 'uploading' || !accessToken)) {
                     e.preventDefault();
-                    e.currentTarget.querySelector('input')?.click();
+                    instructionFileInputRef.current?.click();
                   }
                 }}
               >
                 <input
+                  ref={instructionFileInputRef}
                   type="file"
                   accept="image/*"
                   className="hidden"
