@@ -5,6 +5,9 @@ import { useSession } from '@/components/auth/useSession';
 import LogoutButton from '@/components/auth/LogoutButton';
 import { isOwner } from '@/lib/ownership';
 import { mapRecipeDetailStatusToUiState, type RecipeDetailUiState } from '@/lib/recipeDetailState';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 interface Props {
   recipeId: string;
@@ -114,10 +117,10 @@ export default function RecipeDetail({ recipeId }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="space-x-3 text-sm">
-          <a className="text-indigo-600 underline" href="/">
+          <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/">
             Home
           </a>
-          <a className="text-indigo-600 underline" href="/dashboard">
+          <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/dashboard">
             Dashboard
           </a>
         </div>
@@ -148,73 +151,107 @@ export default function RecipeDetail({ recipeId }: Props) {
       ) : null}
 
       {state.kind === 'ready' ? (
-        <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold text-gray-900">{state.recipe.title}</h1>
-            <p className="text-sm text-gray-700">Servings: {state.recipe.servings}</p>
-            <p className="text-sm text-gray-600">
-              By {state.recipe.author.display_name ?? state.recipe.author.username}
-            </p>
-          </div>
+        <div className="overflow-hidden bg-white rounded-lg shadow-lg">
+          {state.recipe.image_url ? (
+            <img
+              src={state.recipe.image_url}
+              alt={state.recipe.title}
+              className="h-72 w-full object-cover"
+              loading="lazy"
+            />
+          ) : null}
 
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900">Ingredients</h2>
-            <ul className="list-disc pl-6 text-gray-800">
-              {state.recipe.ingredients.map((ri) => (
-                <li key={ri.id}>
-                  {ri.quantity} {ri.unit} {ri.ingredient.display_name}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900">Instructions</h2>
-            <pre className="whitespace-pre-wrap text-gray-800">{state.recipe.instructions}</pre>
-          </div>
-
-          {owner ? (
-            <div className="space-y-3 border-t border-gray-200 pt-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800"
-                  href={`/recipes/${recipeId}/edit`}
-                >
-                  Edit
-                </a>
-
-                <button
-                  type="button"
-                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 disabled:opacity-60"
-                  disabled={actionBusy}
-                  onClick={() => onToggleVisibility(!state.recipe.is_public)}
-                >
-                  {state.recipe.is_public ? 'Make private' : 'Publish'}
-                </button>
-
-                <button
-                  type="button"
-                  className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-60"
-                  disabled={actionBusy}
-                  onClick={onDelete}
-                >
-                  Delete
-                </button>
-
-                {authLoading ? <span className="text-sm text-gray-600">Checking session…</span> : null}
-              </div>
-
-              {actionError ? (
-                <p className="text-sm text-red-600" role="alert">
-                  {actionError}
-                </p>
+          <div className="p-8 space-y-6">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold text-gray-900">{state.recipe.title}</h1>
+              <p className="text-sm text-gray-700">Servings: {state.recipe.servings}</p>
+              {state.recipe.prep_time !== null ? (
+                <p className="text-sm text-gray-700">Preparation time: {state.recipe.prep_time} min</p>
               ) : null}
-
               <p className="text-sm text-gray-600">
-                Visibility: <span className="font-medium">{state.recipe.is_public ? 'Public' : 'Private'}</span>
+                By {state.recipe.author.display_name ?? state.recipe.author.username}
               </p>
             </div>
-          ) : null}
+
+            {state.recipe.description ? (
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold text-gray-900">Description</h2>
+                <p className="text-gray-800 whitespace-pre-wrap">{state.recipe.description}</p>
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-gray-900">Ingredients</h2>
+              <ul className="list-disc pl-6 text-gray-800">
+                {state.recipe.ingredients.map((ri) => (
+                  <li key={ri.id}>
+                    {ri.quantity} {ri.unit} {ri.ingredient.display_name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-gray-900">Instructions</h2>
+              <div className="prose prose-sm max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  components={{
+                    img: (props) => (
+                      // eslint-disable-next-line jsx-a11y/alt-text
+                      <img {...props} className="w-full rounded-lg object-cover" loading="lazy" />
+                    ),
+                    a: (props) => <a {...props} className="text-indigo-600 underline" />,
+                  }}
+                >
+                  {state.recipe.instructions}
+                </ReactMarkdown>
+              </div>
+            </div>
+
+            {owner ? (
+              <div className="space-y-3 border-t border-gray-200 pt-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <a
+                    className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800"
+                    href={`/recipes/${recipeId}/edit`}
+                  >
+                    Edit
+                  </a>
+
+                  <button
+                    type="button"
+                    className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 disabled:opacity-60"
+                    disabled={actionBusy}
+                    onClick={() => onToggleVisibility(!state.recipe.is_public)}
+                  >
+                    {state.recipe.is_public ? 'Make private' : 'Publish'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-60"
+                    disabled={actionBusy}
+                    onClick={onDelete}
+                  >
+                    Delete
+                  </button>
+
+                  {authLoading ? <span className="text-sm text-gray-600">Checking session…</span> : null}
+                </div>
+
+                {actionError ? (
+                  <p className="text-sm text-red-600" role="alert">
+                    {actionError}
+                  </p>
+                ) : null}
+
+                <p className="text-sm text-gray-600">
+                  Visibility: <span className="font-medium">{state.recipe.is_public ? 'Public' : 'Private'}</span>
+                </p>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

@@ -46,7 +46,7 @@ export default function PublicFeed() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-gray-900">Public recipes</h2>
         <div className="flex items-center gap-3">
-          <a className="text-indigo-600 underline" href="/dashboard">
+          <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/dashboard">
             Dashboard
           </a>
           {!authLoading && accessToken ? (
@@ -54,10 +54,10 @@ export default function PublicFeed() {
           ) : null}
           {!authLoading && !accessToken ? (
             <>
-              <a className="text-indigo-600 underline" href="/login">
+              <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/login">
                 Login
               </a>
-              <a className="text-indigo-600 underline" href="/signup">
+              <a className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white" href="/signup">
                 Sign up
               </a>
             </>
@@ -77,22 +77,42 @@ export default function PublicFeed() {
         <>
           {state.data.length === 0 ? <p className="text-gray-700">No public recipes yet.</p> : null}
 
-          <ul className="grid grid-cols-1 gap-4">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {state.data.map((recipe) => (
-              <li key={recipe.id} className="bg-white rounded-lg shadow-lg p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2">
-                    <a className="text-xl font-semibold text-gray-900 underline" href={`/recipes/${recipe.id}`}>
+              <li key={recipe.id} className="overflow-hidden bg-white rounded-lg shadow-lg h-[420px] flex flex-col">
+                <a href={`/recipes/${recipe.id}`} className="block h-44 bg-gray-100">
+                  {recipe.image_url ? (
+                    <img
+                      src={recipe.image_url}
+                      alt={recipe.title}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : null}
+                </a>
+
+                <div className="p-5 flex-1 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <a className="text-lg font-semibold text-gray-900 hover:underline" href={`/recipes/${recipe.id}`}>
                       {recipe.title}
                     </a>
-                    <p className="text-sm text-gray-600">
-                      By <span className="font-medium">{recipe.author.display_name ?? recipe.author.username}</span>
-                    </p>
-                    <p className="text-sm text-gray-700">Servings: {recipe.servings}</p>
-                    {recipe.description ? <p className="text-gray-700">{recipe.description}</p> : null}
+                    <span className="text-xs text-gray-500">{formatDateDMY(recipe.published_at)}</span>
                   </div>
 
-                  <span className="text-xs text-gray-500">{formatDateDMY(recipe.published_at)}</span>
+                  <p className="text-sm text-gray-600">
+                    By <span className="font-medium">{recipe.author.display_name ?? recipe.author.username}</span>
+                  </p>
+
+                  <p className="text-sm text-gray-700">Servings: {recipe.servings}</p>
+                  {recipe.prep_time !== null ? (
+                    <p className="text-sm text-gray-700">Preparation time: {recipe.prep_time} min</p>
+                  ) : null}
+
+                  {recipe.description ? (
+                    <p className="text-sm text-gray-700 overflow-hidden">{recipe.description}</p>
+                  ) : (
+                    <div className="flex-1" />
+                  )}
                 </div>
               </li>
             ))}

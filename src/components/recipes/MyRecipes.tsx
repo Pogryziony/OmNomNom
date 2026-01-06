@@ -61,12 +61,12 @@ export default function MyRecipes() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">My recipes</h1>
         <div className="flex items-center gap-3">
-          <a className="text-indigo-600 underline" href="/">
+          <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/">
             Home
           </a>
           {!authLoading && accessToken ? (
             <>
-              <a className="text-indigo-600 underline" href="/recipes/new">
+              <a className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white" href="/recipes/new">
                 New recipe
               </a>
               <LogoutButton />
@@ -80,7 +80,7 @@ export default function MyRecipes() {
       {state.kind === 'needs-auth' ? (
         <div className="bg-white rounded-lg shadow-lg p-6 space-y-3">
           <p className="text-gray-800">You need to log in to view your recipes.</p>
-          <a className="text-indigo-600 underline" href="/login">
+          <a className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white inline-block" href="/login">
             Go to login
           </a>
         </div>
@@ -97,25 +97,38 @@ export default function MyRecipes() {
           {state.data.length === 0 ? (
             <div className="bg-white rounded-lg shadow-lg p-6 space-y-2">
               <p className="text-gray-800">No recipes yet.</p>
-              <a className="text-indigo-600 underline" href="/recipes/new">
+              <a className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white inline-block" href="/recipes/new">
                 Create your first recipe
               </a>
             </div>
           ) : (
-            <ul className="grid grid-cols-1 gap-4">
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {state.data.map((recipe) => (
-                <li key={recipe.id} className="bg-white rounded-lg shadow-lg p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-2">
-                      <a className="text-xl font-semibold text-gray-900 underline" href={`/recipes/${recipe.id}`}>
+                <li key={recipe.id} className="overflow-hidden bg-white rounded-lg shadow-lg h-[380px] flex flex-col">
+                  <a href={`/recipes/${recipe.id}`} className="block h-44 bg-gray-100">
+                    {recipe.image_url ? (
+                      <img
+                        src={recipe.image_url}
+                        alt={recipe.title}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : null}
+                  </a>
+
+                  <div className="p-5 flex-1 flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <a className="text-lg font-semibold text-gray-900 hover:underline" href={`/recipes/${recipe.id}`}>
                         {recipe.title}
                       </a>
-                      <p className="text-sm text-gray-700">Servings: {recipe.servings}</p>
-                      <p className="text-sm text-gray-600">
-                        {recipe.is_public ? 'Public' : 'Private'}
-                      </p>
+                      <span className="text-xs text-gray-500">{formatDateDMY(recipe.created_at)}</span>
                     </div>
-                    <span className="text-xs text-gray-500">{formatDateDMY(recipe.created_at)}</span>
+
+                    <p className="text-sm text-gray-700">Servings: {recipe.servings}</p>
+                    {recipe.prep_time !== null ? (
+                      <p className="text-sm text-gray-700">Preparation time: {recipe.prep_time} min</p>
+                    ) : null}
+                    <p className="text-sm text-gray-600">{recipe.is_public ? 'Public' : 'Private'}</p>
                   </div>
                 </li>
               ))}
