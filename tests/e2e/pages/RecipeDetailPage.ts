@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { RecipeFormPage } from './RecipeFormPage.ts';
+import { RecipeFormPage } from './RecipeFormPage';
 
 export class RecipeDetailPage {
   readonly page: Page;
