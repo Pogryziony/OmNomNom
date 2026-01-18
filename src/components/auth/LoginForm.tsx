@@ -29,7 +29,7 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4" data-testid="login-form">
       <div>
         <label className="block text-sm font-medium text-gray-700" htmlFor="email">
           Email
@@ -40,6 +40,7 @@ export default function LoginForm() {
           autoComplete="email"
           required
           className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+          data-testid="login-email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -55,6 +56,7 @@ export default function LoginForm() {
           autoComplete="current-password"
           required
           className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+          data-testid="login-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -70,6 +72,7 @@ export default function LoginForm() {
         type="submit"
         disabled={submitting}
         className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white disabled:opacity-60"
+        data-testid="login-submit"
       >
         {submitting ? 'Logging in…' : 'Login'}
       </button>

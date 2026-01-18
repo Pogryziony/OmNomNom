@@ -77,9 +77,13 @@ export default function PublicFeed() {
         <>
           {state.data.length === 0 ? <p className="text-gray-700">No public recipes yet.</p> : null}
 
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="public-feed-list">
             {state.data.map((recipe) => (
-              <li key={recipe.id} className="overflow-hidden bg-white rounded-lg shadow-lg h-[420px] flex flex-col">
+              <li
+                key={recipe.id}
+                className="overflow-hidden bg-white rounded-lg shadow-lg h-[420px] flex flex-col"
+                data-testid={`public-recipe-card-${recipe.id}`}
+              >
                 <a href={`/recipes/${recipe.id}`} className="block h-44 bg-gray-100">
                   {recipe.image_url ? (
                     <img
