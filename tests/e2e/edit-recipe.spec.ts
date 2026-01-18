@@ -5,7 +5,7 @@ import { RecipeDetailPage } from './pages/RecipeDetailPage';
 
 test('edit recipe updates fields', async ({ page }) => {
   await login(page);
-  const { recipeId, title } = await createRecipe(page);
+  const { title } = await createRecipe(page);
 
   const detail = new RecipeDetailPage(page);
   const form = await detail.openEdit();
