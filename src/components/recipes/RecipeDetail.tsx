@@ -215,6 +215,7 @@ export default function RecipeDetail({ recipeId }: Props) {
                   <a
                     className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800"
                     href={`/recipes/${recipeId}/edit`}
+                    data-testid="recipe-edit"
                   >
                     Edit
                   </a>
@@ -224,6 +225,7 @@ export default function RecipeDetail({ recipeId }: Props) {
                     className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 disabled:opacity-60"
                     disabled={actionBusy}
                     onClick={() => onToggleVisibility(!state.recipe.is_public)}
+                    data-testid="recipe-visibility-toggle"
                   >
                     {state.recipe.is_public ? 'Make private' : 'Publish'}
                   </button>
@@ -233,6 +235,7 @@ export default function RecipeDetail({ recipeId }: Props) {
                     className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-60"
                     disabled={actionBusy}
                     onClick={onDelete}
+                    data-testid="recipe-delete"
                   >
                     Delete
                   </button>
@@ -247,7 +250,10 @@ export default function RecipeDetail({ recipeId }: Props) {
                 ) : null}
 
                 <p className="text-sm text-gray-600">
-                  Visibility: <span className="font-medium">{state.recipe.is_public ? 'Public' : 'Private'}</span>
+                  Visibility:{' '}
+                  <span className="font-medium" data-testid="recipe-visibility-status">
+                    {state.recipe.is_public ? 'Public' : 'Private'}
+                  </span>
                 </p>
               </div>
             ) : null}
