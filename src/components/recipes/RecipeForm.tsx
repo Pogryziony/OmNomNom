@@ -313,7 +313,7 @@ export default function RecipeForm(props: Props) {
           </div>
         ) : null}
 
-        <form onSubmit={onSubmit} className="space-y-5">
+        <form onSubmit={onSubmit} className="space-y-5" data-testid="recipe-form">
           <datalist id="unit-options">
             {unitOptions.map((unit) => (
               <option key={unit} value={unit} />
@@ -328,6 +328,7 @@ export default function RecipeForm(props: Props) {
               id="title"
               required
               className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              data-testid="recipe-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -341,6 +342,7 @@ export default function RecipeForm(props: Props) {
               id="imageUrl"
               inputMode="url"
               className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              data-testid="recipe-image-url"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               placeholder="https://…"
@@ -382,6 +384,7 @@ export default function RecipeForm(props: Props) {
               rows={6}
               maxLength={250}
               className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              data-testid="recipe-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional. Max 250 characters."
@@ -398,6 +401,7 @@ export default function RecipeForm(props: Props) {
               min={1}
               required
               className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              data-testid="recipe-servings"
               value={servings}
               onChange={(e) => setServings(Number.parseInt(e.target.value || '0', 10) || 0)}
             />
@@ -412,6 +416,7 @@ export default function RecipeForm(props: Props) {
               type="number"
               min={0}
               className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              data-testid="recipe-prep-time"
               value={prepTime}
               onChange={(e) => setPrepTime(e.target.value)}
               placeholder="Optional"
@@ -427,6 +432,7 @@ export default function RecipeForm(props: Props) {
               required
               rows={8}
               className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+              data-testid="recipe-instructions"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
             />
@@ -540,6 +546,7 @@ export default function RecipeForm(props: Props) {
             type="submit"
             disabled={submitState === 'submitting' || authLoading || loadState.kind === 'loading'}
             className="rounded-md bg-indigo-600 px-4 py-2 text-white disabled:opacity-60"
+            data-testid="recipe-save"
           >
             {submitState === 'submitting' ? 'Saving…' : 'Save'}
           </button>
