@@ -16,5 +16,5 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  reporter: [['list']]
+  reporter: 'list'
 });
