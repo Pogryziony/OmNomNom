@@ -38,6 +38,18 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Playwright tests
+        run: npx playwright test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Playwright tests
+        run: npx playwright test
+
   main-ci:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -68,6 +80,18 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Playwright tests
+        run: npx playwright test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Playwright tests
+        run: npx playwright test
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
