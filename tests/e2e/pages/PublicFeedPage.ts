@@ -1,5 +1,5 @@
-import { expect, type Page } from '@playwright/test';
-import { RecipeCard } from '../components/RecipeCard';
+import { expect, type Page } from "@playwright/test";
+import { RecipeCard } from "../components/RecipeCard";
 
 export class PublicFeedPage {
   readonly page: Page;
@@ -9,8 +9,8 @@ export class PublicFeedPage {
   }
 
   async goto() {
-    await this.page.goto('/');
-    await expect(this.page.getByTestId('public-feed-list')).toBeVisible();
+    await this.page.goto("/");
+    await expect(this.page.getByTestId("public-feed-list")).toBeVisible();
   }
 
   recipeCard(recipeId: string) {

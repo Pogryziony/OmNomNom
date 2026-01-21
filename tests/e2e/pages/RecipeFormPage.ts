@@ -1,5 +1,5 @@
-import { expect, type Page } from '@playwright/test';
-import { RecipeDetailPage } from './RecipeDetailPage';
+import { expect, type Page } from "@playwright/test";
+import { RecipeDetailPage } from "./RecipeDetailPage";
 
 export class RecipeFormPage {
   readonly page: Page;
@@ -9,11 +9,13 @@ export class RecipeFormPage {
   }
 
   async expectLoaded() {
-    await expect(this.page.getByTestId('recipe-form')).toBeVisible();
+    await expect(this.page.getByTestId("recipe-form")).toBeVisible();
   }
 
   async waitForPrefill(prepTime: string) {
-    await expect(this.page.getByTestId('recipe-prep-time')).toHaveValue(prepTime);
+    await expect(this.page.getByTestId("recipe-prep-time")).toHaveValue(
+      prepTime,
+    );
   }
 
   async fillRecipe(data: {
@@ -25,26 +27,26 @@ export class RecipeFormPage {
     imageUrl: string;
     ingredient: { name: string; unit: string; qty: string };
   }) {
-    await this.page.getByTestId('recipe-title').fill(data.title);
-    await this.page.getByTestId('recipe-description').fill(data.description);
-    await this.page.getByTestId('recipe-servings').fill(data.servings);
-    await this.page.getByTestId('recipe-prep-time').fill(data.prepTime);
-    await this.page.getByTestId('recipe-instructions').fill(data.instructions);
-    await this.page.getByTestId('recipe-image-url').fill(data.imageUrl);
+    await this.page.getByTestId("recipe-title").fill(data.title);
+    await this.page.getByTestId("recipe-description").fill(data.description);
+    await this.page.getByTestId("recipe-servings").fill(data.servings);
+    await this.page.getByTestId("recipe-prep-time").fill(data.prepTime);
+    await this.page.getByTestId("recipe-instructions").fill(data.instructions);
+    await this.page.getByTestId("recipe-image-url").fill(data.imageUrl);
 
-    await this.page.locator('#ingredient-name-0').fill(data.ingredient.name);
-    await this.page.locator('#ingredient-unit-0').fill(data.ingredient.unit);
-    await this.page.locator('#ingredient-qty-0').fill(data.ingredient.qty);
+    await this.page.locator("#ingredient-name-0").fill(data.ingredient.name);
+    await this.page.locator("#ingredient-unit-0").fill(data.ingredient.unit);
+    await this.page.locator("#ingredient-qty-0").fill(data.ingredient.qty);
   }
 
   async save(): Promise<RecipeDetailPage> {
-    const saveButton = this.page.getByTestId('recipe-save');
+    const saveButton = this.page.getByTestId("recipe-save");
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
     await this.page.waitForURL((url) => {
       const path = new URL(url).pathname;
-      return /\/recipes\/[^/]+$/.test(path) && !path.endsWith('/new');
+      return /\/recipes\/[^/]+$/.test(path) && !path.endsWith("/new");
     });
 
     return new RecipeDetailPage(this.page);
@@ -53,7 +55,7 @@ export class RecipeFormPage {
   getRecipeIdFromUrl(): string {
     const match = this.page.url().match(/\/recipes\/([^/]+)(?:\/edit)?$/);
     if (!match) {
-      throw new Error('Failed to extract recipe id from URL');
+      throw new Error("Failed to extract recipe id from URL");
     }
     return match[1];
   }

@@ -1,26 +1,29 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { DeleteResponse, RecipeDTO, RecipeVisibilityDTO } from '@/types';
-import { fetchJson, makeAuthHeaders } from '@/lib/http';
-import { useSession } from '@/components/auth/useSession';
-import LogoutButton from '@/components/auth/LogoutButton';
-import { isOwner } from '@/lib/ownership';
-import { mapRecipeDetailStatusToUiState, type RecipeDetailUiState } from '@/lib/recipeDetailState';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkBreaks from 'remark-breaks';
+import { useEffect, useMemo, useState } from "react";
+import type { DeleteResponse, RecipeDTO, RecipeVisibilityDTO } from "@/types";
+import { fetchJson, makeAuthHeaders } from "@/lib/http";
+import { useSession } from "@/components/auth/useSession";
+import LogoutButton from "@/components/auth/LogoutButton";
+import { isOwner } from "@/lib/ownership";
+import {
+  mapRecipeDetailStatusToUiState,
+  type RecipeDetailUiState,
+} from "@/lib/recipeDetailState";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 interface Props {
   recipeId: string;
 }
 
 type State =
-  | { kind: 'loading' }
-  | { kind: 'ui'; ui: RecipeDetailUiState }
-  | { kind: 'ready'; recipe: RecipeDTO };
+  | { kind: "loading" }
+  | { kind: "ui"; ui: RecipeDetailUiState }
+  | { kind: "ready"; recipe: RecipeDTO };
 
 export default function RecipeDetail({ recipeId }: Props) {
   const { accessToken, user, loading: authLoading } = useSession();
-  const [state, setState] = useState<State>({ kind: 'loading' });
+  const [state, setState] = useState<State>({ kind: "loading" });
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
 
@@ -28,7 +31,7 @@ export default function RecipeDetail({ recipeId }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    setState({ kind: 'loading' });
+    setState({ kind: "loading" });
 
     const headers = {
       ...(accessToken ? makeAuthHeaders(accessToken) : {}),
@@ -39,16 +42,22 @@ export default function RecipeDetail({ recipeId }: Props) {
         if (cancelled) return;
 
         if (!response.ok) {
-          setState({ kind: 'ui', ui: mapRecipeDetailStatusToUiState(response.status) });
+          setState({
+            kind: "ui",
+            ui: mapRecipeDetailStatusToUiState(response.status),
+          });
           return;
         }
 
         const recipe = (await response.json()) as RecipeDTO;
-        setState({ kind: 'ready', recipe });
+        setState({ kind: "ready", recipe });
       })
       .catch(() => {
         if (cancelled) return;
-        setState({ kind: 'ui', ui: { kind: 'error', message: 'Failed to load recipe' } });
+        setState({
+          kind: "ui",
+          ui: { kind: "error", message: "Failed to load recipe" },
+        });
       });
 
     return () => {
@@ -56,7 +65,7 @@ export default function RecipeDetail({ recipeId }: Props) {
     };
   }, [accessToken, recipeUrl]);
 
-  const currentRecipe = state.kind === 'ready' ? state.recipe : null;
+  const currentRecipe = state.kind === "ready" ? state.recipe : null;
   const owner = isOwner(currentRecipe?.user_id, user?.id);
 
   async function onToggleVisibility(nextValue: boolean) {
@@ -67,17 +76,20 @@ export default function RecipeDetail({ recipeId }: Props) {
     setActionBusy(true);
 
     try {
-      const result = await fetchJson<RecipeVisibilityDTO>(`/api/recipes/${recipeId}/visibility`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...makeAuthHeaders(accessToken),
+      const result = await fetchJson<RecipeVisibilityDTO>(
+        `/api/recipes/${recipeId}/visibility`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...makeAuthHeaders(accessToken),
+          },
+          body: JSON.stringify({ is_public: nextValue }),
         },
-        body: JSON.stringify({ is_public: nextValue }),
-      });
+      );
 
       setState({
-        kind: 'ready',
+        kind: "ready",
         recipe: {
           ...currentRecipe,
           is_public: result.is_public,
@@ -86,7 +98,9 @@ export default function RecipeDetail({ recipeId }: Props) {
         },
       });
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to update visibility');
+      setActionError(
+        err instanceof Error ? err.message : "Failed to update visibility",
+      );
     } finally {
       setActionBusy(false);
     }
@@ -100,15 +114,17 @@ export default function RecipeDetail({ recipeId }: Props) {
 
     try {
       await fetchJson<DeleteResponse>(`/api/recipes/${recipeId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
           ...makeAuthHeaders(accessToken),
         },
       });
 
-      window.location.href = '/dashboard';
+      window.location.href = "/dashboard";
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to delete recipe');
+      setActionError(
+        err instanceof Error ? err.message : "Failed to delete recipe",
+      );
       setActionBusy(false);
     }
   }
@@ -117,32 +133,46 @@ export default function RecipeDetail({ recipeId }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="space-x-3 text-sm">
-          <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/">
+          <a
+            className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800"
+            href="/"
+          >
             Home
           </a>
-          <a className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800" href="/dashboard">
+          <a
+            className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800"
+            href="/dashboard"
+          >
             Dashboard
           </a>
         </div>
         {!authLoading && accessToken ? <LogoutButton /> : null}
       </div>
 
-      {state.kind === 'loading' ? <p className="text-gray-700">Loading…</p> : null}
+      {state.kind === "loading" ? (
+        <p className="text-gray-700">Loading…</p>
+      ) : null}
 
-      {state.kind === 'ui' ? (
+      {state.kind === "ui" ? (
         <div className="bg-white rounded-lg shadow-lg p-6 space-y-3">
-          {state.ui.kind === 'auth-required' ? (
+          {state.ui.kind === "auth-required" ? (
             <>
-              <p className="text-gray-800">Login required to view this private recipe.</p>
+              <p className="text-gray-800">
+                Login required to view this private recipe.
+              </p>
               <a className="text-indigo-600 underline" href="/login">
                 Go to login
               </a>
             </>
           ) : null}
 
-          {state.ui.kind === 'access-denied' ? <p className="text-gray-800">Access denied.</p> : null}
-          {state.ui.kind === 'not-found' ? <p className="text-gray-800">Recipe not found.</p> : null}
-          {state.ui.kind === 'error' ? (
+          {state.ui.kind === "access-denied" ? (
+            <p className="text-gray-800">Access denied.</p>
+          ) : null}
+          {state.ui.kind === "not-found" ? (
+            <p className="text-gray-800">Recipe not found.</p>
+          ) : null}
+          {state.ui.kind === "error" ? (
             <p className="text-red-600" role="alert">
               {state.ui.message}
             </p>
@@ -150,7 +180,7 @@ export default function RecipeDetail({ recipeId }: Props) {
         </div>
       ) : null}
 
-      {state.kind === 'ready' ? (
+      {state.kind === "ready" ? (
         <div className="overflow-hidden bg-white rounded-lg shadow-lg">
           {state.recipe.image_url ? (
             <img
@@ -163,25 +193,39 @@ export default function RecipeDetail({ recipeId }: Props) {
 
           <div className="p-8 space-y-6">
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold text-gray-900">{state.recipe.title}</h1>
-              <p className="text-sm text-gray-700">Servings: {state.recipe.servings}</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {state.recipe.title}
+              </h1>
+              <p className="text-sm text-gray-700">
+                Servings: {state.recipe.servings}
+              </p>
               {state.recipe.prep_time !== null ? (
-                <p className="text-sm text-gray-700">Preparation time: {state.recipe.prep_time} min</p>
+                <p className="text-sm text-gray-700">
+                  Preparation time: {state.recipe.prep_time} min
+                </p>
               ) : null}
               <p className="text-sm text-gray-600">
-                By {state.recipe.author.display_name ?? state.recipe.author.username}
+                By{" "}
+                {state.recipe.author.display_name ??
+                  state.recipe.author.username}
               </p>
             </div>
 
             {state.recipe.description ? (
               <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-gray-900">Description</h2>
-                <p className="text-gray-800 whitespace-pre-wrap">{state.recipe.description}</p>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Description
+                </h2>
+                <p className="text-gray-800 whitespace-pre-wrap">
+                  {state.recipe.description}
+                </p>
               </div>
             ) : null}
 
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-gray-900">Ingredients</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Ingredients
+              </h2>
               <ul className="list-disc pl-6 text-gray-800">
                 {state.recipe.ingredients.map((ri) => (
                   <li key={ri.id}>
@@ -192,14 +236,20 @@ export default function RecipeDetail({ recipeId }: Props) {
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-gray-900">Instructions</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Instructions
+              </h2>
               <div className="prose prose-sm max-w-none">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
                     img: (props) => (
                       // eslint-disable-next-line jsx-a11y/alt-text
-                      <img {...props} className="w-full rounded-lg object-cover" loading="lazy" />
+                      <img
+                        {...props}
+                        className="w-full rounded-lg object-cover"
+                        loading="lazy"
+                      />
                     ),
                     a: ({ children, ...props }) => (
                       <a {...props} className="text-indigo-600 underline">
@@ -231,7 +281,7 @@ export default function RecipeDetail({ recipeId }: Props) {
                     onClick={() => onToggleVisibility(!state.recipe.is_public)}
                     data-testid="recipe-visibility-toggle"
                   >
-                    {state.recipe.is_public ? 'Make private' : 'Publish'}
+                    {state.recipe.is_public ? "Make private" : "Publish"}
                   </button>
 
                   <button
@@ -244,7 +294,11 @@ export default function RecipeDetail({ recipeId }: Props) {
                     Delete
                   </button>
 
-                  {authLoading ? <span className="text-sm text-gray-600">Checking session…</span> : null}
+                  {authLoading ? (
+                    <span className="text-sm text-gray-600">
+                      Checking session…
+                    </span>
+                  ) : null}
                 </div>
 
                 {actionError ? (
@@ -254,9 +308,12 @@ export default function RecipeDetail({ recipeId }: Props) {
                 ) : null}
 
                 <p className="text-sm text-gray-600">
-                  Visibility:{' '}
-                  <span className="font-medium" data-testid="recipe-visibility-status">
-                    {state.recipe.is_public ? 'Public' : 'Private'}
+                  Visibility:{" "}
+                  <span
+                    className="font-medium"
+                    data-testid="recipe-visibility-status"
+                  >
+                    {state.recipe.is_public ? "Public" : "Private"}
                   </span>
                 </p>
               </div>

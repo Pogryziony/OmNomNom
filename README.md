@@ -60,23 +60,23 @@ A modern recipe management application built with cutting-edge technologies.
 
 ## 🏗️ Project Structure
 
-``` md
+```md
 /
-├── public/              # Static assets
+├── public/ # Static assets
 ├── src/
-│   ├── components/      # React components
-│   ├── layouts/         # Astro layouts
-│   ├── lib/            # Utility functions and configurations
-│   ├── pages/          # Astro pages (file-based routing)
-│   └── styles/         # Global styles
+│ ├── components/ # React components
+│ ├── layouts/ # Astro layouts
+│ ├── lib/ # Utility functions and configurations
+│ ├── pages/ # Astro pages (file-based routing)
+│ └── styles/ # Global styles
 ├── supabase/
-│   └── migrations/     # Supabase migration files
+│ └── migrations/ # Supabase migration files
 ├── .github/
-│   ├── workflows/      # GitHub Actions CI/CD
-│   └── config.toml     # Supabase config
-├── astro.config.mjs    # Astro configuration
-├── tsconfig.json       # TypeScript configuration
-└── package.json        # Project dependencies
+│ ├── workflows/ # GitHub Actions CI/CD
+│ └── config.toml # Supabase config
+├── astro.config.mjs # Astro configuration
+├── tsconfig.json # TypeScript configuration
+└── package.json # Project dependencies
 ```
 
 ## 🎨 Adding Shadcn/ui Components
@@ -108,7 +108,7 @@ See `.env.example` for a template.
 
 ## 🚢 Deployment
 
-The project includes a GitHub Actions workflow that automatically builds and tests the application on every push to `main` or `develop` branches.
+The project includes a GitHub Actions workflow that automatically builds and tests the application on every push to `master` branch.
 
 For deployment, you can use various platforms:
 

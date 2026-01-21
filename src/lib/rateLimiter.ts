@@ -48,9 +48,14 @@ const getBucket = (key: string, limit: number, now: number) => {
   return bucket;
 };
 
-const computeResetTimestamp = (bucket: TokenBucket, limit: number, now: number) => {
+const computeResetTimestamp = (
+  bucket: TokenBucket,
+  limit: number,
+  now: number,
+) => {
   const tokensNeeded = Math.max(0, limit - bucket.tokens);
-  const msUntilFull = tokensNeeded === 0 ? 0 : (tokensNeeded / limit) * WINDOW_MS;
+  const msUntilFull =
+    tokensNeeded === 0 ? 0 : (tokensNeeded / limit) * WINDOW_MS;
 
   return Math.ceil((now + msUntilFull) / 1000);
 };
@@ -65,7 +70,11 @@ const calculateRetryAfter = (bucket: TokenBucket, limit: number) => {
   return Math.max(1, Math.ceil(msUntilNextToken / 1000));
 };
 
-export const consumeRateLimit = (key: string, limit: number, now = Date.now()): RateLimitResult => {
+export const consumeRateLimit = (
+  key: string,
+  limit: number,
+  now = Date.now(),
+): RateLimitResult => {
   const bucket = getBucket(key, limit, now);
   const reset = computeResetTimestamp(bucket, limit, now);
 

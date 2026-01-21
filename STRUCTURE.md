@@ -4,31 +4,31 @@ This document describes the structure of the OmNomNom project.
 
 ## Directory Layout
 
-``` md
+```md
 OmNomNom/
 ├── .github/
-│   └── workflows/
-│       └── ci.yml              # GitHub Actions CI/CD pipeline
+│ └── workflows/
+│ └── ci.yml # GitHub Actions CI/CD pipeline
 ├── public/
-│   └── favicon.svg             # Application favicon
+│ └── favicon.svg # Application favicon
 ├── src/
-│   ├── components/
-│   │   └── Counter.tsx         # Example React 19 component
-│   ├── layouts/
-│   │   └── Layout.astro        # Base layout with Tailwind CSS
-│   ├── lib/
-│   │   └── supabase.ts         # Supabase client configuration
-│   ├── pages/
-│   │   └── index.astro         # Homepage (file-based routing)
-│   └── styles/
-│       └── global.css          # Global Tailwind CSS styles
-├── .env.example                # Environment variable template
-├── .gitignore                  # Git ignore patterns
-├── astro.config.mjs            # Astro configuration
-├── components.json             # Shadcn/ui configuration
-├── package.json                # Project dependencies and scripts
-├── README.md                   # Project documentation
-└── tsconfig.json               # TypeScript configuration
+│ ├── components/
+│ │ └── Counter.tsx # Example React 19 component
+│ ├── layouts/
+│ │ └── Layout.astro # Base layout with Tailwind CSS
+│ ├── lib/
+│ │ └── supabase.ts # Supabase client configuration
+│ ├── pages/
+│ │ └── index.astro # Homepage (file-based routing)
+│ └── styles/
+│ └── global.css # Global Tailwind CSS styles
+├── .env.example # Environment variable template
+├── .gitignore # Git ignore patterns
+├── astro.config.mjs # Astro configuration
+├── components.json # Shadcn/ui configuration
+├── package.json # Project dependencies and scripts
+├── README.md # Project documentation
+└── tsconfig.json # TypeScript configuration
 ```
 
 ## Key Files

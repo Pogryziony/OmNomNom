@@ -1,5 +1,10 @@
-const REDACTED_VALUE = '[REDACTED]';
-const SENSITIVE_HEADERS = new Set(['authorization', 'proxy-authorization', 'cookie', 'set-cookie']);
+const REDACTED_VALUE = "[REDACTED]";
+const SENSITIVE_HEADERS = new Set([
+  "authorization",
+  "proxy-authorization",
+  "cookie",
+  "set-cookie",
+]);
 
 export interface ApiRateLimitLog {
   limit: number;
@@ -41,21 +46,21 @@ export const sanitizeHeaders = (headers: Headers) => {
 
 const resolveLogLevel = (status: number) => {
   if (status >= 500) {
-    return 'error';
+    return "error";
   }
 
   if (status >= 400) {
-    return 'warn';
+    return "warn";
   }
 
-  return 'info';
+  return "info";
 };
 
 export const logApiRequest = (entry: ApiRequestLogEntry) => {
   const payload = {
     timestamp: new Date().toISOString(),
     level: resolveLogLevel(entry.status),
-    event: 'api_request',
+    event: "api_request",
     ...entry,
   };
 

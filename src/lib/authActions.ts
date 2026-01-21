@@ -1,6 +1,9 @@
 export interface SupabaseAuthClient {
   auth: {
-    signInWithPassword: (args: { email: string; password: string }) => Promise<unknown>;
+    signInWithPassword: (args: {
+      email: string;
+      password: string;
+    }) => Promise<unknown>;
     signUp: (args: { email: string; password: string }) => Promise<unknown>;
     signOut: () => Promise<unknown>;
   };
@@ -9,7 +12,7 @@ export interface SupabaseAuthClient {
 export async function loginWithEmailPassword(
   client: SupabaseAuthClient,
   email: string,
-  password: string
+  password: string,
 ): Promise<unknown> {
   return client.auth.signInWithPassword({ email, password });
 }
@@ -17,7 +20,7 @@ export async function loginWithEmailPassword(
 export async function signupWithEmailPassword(
   client: SupabaseAuthClient,
   email: string,
-  password: string
+  password: string,
 ): Promise<unknown> {
   return client.auth.signUp({ email, password });
 }
