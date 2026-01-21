@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import process from 'node:process';
 
 function run(command, args) {
   return new Promise((resolve, reject) => {

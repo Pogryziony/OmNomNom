@@ -201,7 +201,11 @@ export default function RecipeDetail({ recipeId }: Props) {
                       // eslint-disable-next-line jsx-a11y/alt-text
                       <img {...props} className="w-full rounded-lg object-cover" loading="lazy" />
                     ),
-                    a: (props) => <a {...props} className="text-indigo-600 underline" />,
+                    a: ({ children, ...props }) => (
+                      <a {...props} className="text-indigo-600 underline">
+                        {children}
+                      </a>
+                    ),
                   }}
                 >
                   {state.recipe.instructions}

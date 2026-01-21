@@ -63,10 +63,18 @@ const generatedConfig = {
 const apiRelaxConfig = tseslint.config({
   files: ["src/pages/api/**/*.ts"],
   rules: {
+    "no-console": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/array-type": "off",
+  },
+});
+
+const nodeRuntimeConfig = tseslint.config({
+  files: ["scripts/**/*.{js,mjs}", "src/lib/logger.ts", "src/middleware/**/*.ts"],
+  rules: {
+    "no-console": "off",
   },
 });
 
@@ -89,6 +97,7 @@ export default tseslint.config(
   eslintPluginAstro.configs["flat/recommended"],
   generatedConfig,
   apiRelaxConfig,
+  nodeRuntimeConfig,
   testsRelaxConfig,
   eslintConfigPrettier
 );

@@ -157,7 +157,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Step 4: Get or create shopping list
     // @ts-ignore - Database types not yet generated from schema
-    const { data: shoppingListData, error: listError } = await locals.supabase
+    const { data: listData, error: listError } = await locals.supabase
       .from('shopping_lists')
       .select('id')
       .eq('user_id', user.id)
@@ -166,7 +166,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         error: any;
       };
 
-    let shoppingList = shoppingListData;
+    let shoppingList = listData;
 
     if (listError && listError.code === 'PGRST116') {
       // Create shopping list if it doesn't exist
@@ -335,6 +335,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
       .eq('id', shoppingList.id);
 
     // Step 10: Build response
+    const itemsUpdated = 0;
+
     const response: GenerateShoppingListResponse = {
       id: shoppingList.id,
       items_added: addedItems.length,
