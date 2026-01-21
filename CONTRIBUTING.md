@@ -51,7 +51,7 @@ Follow conventional commit format:
 
 Example:
 
-``` md
+```md
 feat: add recipe card component
 fix: correct type error in Counter component
 docs: update README with deployment instructions

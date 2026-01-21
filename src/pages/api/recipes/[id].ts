@@ -2,14 +2,14 @@
  * GET /api/recipes/:id - Get Recipe by ID
  * PUT /api/recipes/:id - Update Recipe
  * DELETE /api/recipes/:id - Delete Recipe
- * 
+ *
  * Handles individual recipe operations including retrieval, updates, and deletion.
- * 
+ *
  * @see .ai/api-plan.md - API specifications
  * @see src/types.ts - Type definitions
  */
 
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 import type {
   RecipeDTO,
   UpdateRecipeCommand,
@@ -22,9 +22,13 @@ import type {
   RecipeIngredientWithDetails,
   RecipeIngredientInput,
   DeleteResponse,
-} from '@/types';
+} from "@/types";
 
-import { getOrCreateIngredient, normalizeIngredientName, toTitleCase } from './_utils';
+import {
+  getOrCreateIngredient,
+  normalizeIngredientName,
+  toTitleCase,
+} from "./_utils";
 
 /**
  * Helper function to create JSON error responses
@@ -33,7 +37,7 @@ function jsonError(
   code: ApiErrorCode,
   message: string,
   status: number,
-  field?: string
+  field?: string,
 ): Response {
   const error: ApiErrorResponse = {
     error: {
@@ -45,15 +49,13 @@ function jsonError(
   };
   return new Response(JSON.stringify(error), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { "Content-Type": "application/json" },
   });
 }
 
-
-
 /**
  * GET /api/recipes/:id
- * 
+ *
  * Retrieves a single recipe with full details including author and ingredients.
  * - Private recipes: Only accessible by owner
  * - Public recipes: Accessible by all users (authenticated and anonymous)
@@ -62,86 +64,78 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
   try {
     const { id } = params;
 
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : null;
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.replace("Bearer ", "")
+      : null;
 
     if (!id) {
-      return jsonError(
-        'VALIDATION_ERROR',
-        'Recipe ID is required',
-        400,
-        'id'
-      );
+      return jsonError("VALIDATION_ERROR", "Recipe ID is required", 400, "id");
     }
 
     // Step 1: Fetch recipe
     // @ts-ignore - Database types not yet generated from schema
-    const { data: recipe, error: recipeError } = await locals.supabase
-      .from('recipes')
-      .select('*')
-      .eq('id', id)
-      .single() as { data: RecipeEntity | null; error: any };
+    const { data: recipe, error: recipeError } = (await locals.supabase
+      .from("recipes")
+      .select("*")
+      .eq("id", id)
+      .single()) as { data: RecipeEntity | null; error: any };
 
     if (recipeError || !recipe) {
-      return jsonError(
-        'NOT_FOUND',
-        'Recipe not found',
-        404
-      );
+      return jsonError("NOT_FOUND", "Recipe not found", 404);
     }
 
     // Step 2: Check authorization for private recipes
     if (!recipe.is_public) {
       if (!token) {
         return jsonError(
-          'AUTHENTICATION_ERROR',
-          'Authentication required for private recipes',
-          401
+          "AUTHENTICATION_ERROR",
+          "Authentication required for private recipes",
+          401,
         );
       }
-      const { data: { user }, error: authError } = await locals.supabase.auth.getUser(token);
+      const {
+        data: { user },
+        error: authError,
+      } = await locals.supabase.auth.getUser(token);
 
       if (authError || !user) {
         return jsonError(
-          'AUTHENTICATION_ERROR',
-          'Invalid or expired token',
-          401
+          "AUTHENTICATION_ERROR",
+          "Invalid or expired token",
+          401,
         );
       }
 
       if (recipe.user_id !== user.id) {
         return jsonError(
-          'AUTHORIZATION_ERROR',
-          'You do not have permission to access this recipe',
-          403
+          "AUTHORIZATION_ERROR",
+          "You do not have permission to access this recipe",
+          403,
         );
       }
     }
 
     // Step 3: Fetch author profile
     // @ts-ignore - Database types not yet generated from schema
-    const { data: profile, error: profileError } = await locals.supabase
-      .from('profiles')
-      .select('username, display_name, avatar_url, created_at')
-      .eq('id', recipe.user_id)
-      .single() as { data: Partial<PublicProfileDTO> | null; error: any };
+    const { data: profile, error: profileError } = (await locals.supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url, created_at")
+      .eq("id", recipe.user_id)
+      .single()) as { data: Partial<PublicProfileDTO> | null; error: any };
 
     if (profileError || !profile) {
-      console.error('Profile fetch error:', profileError);
-      return jsonError(
-        'INTERNAL_ERROR',
-        'Failed to fetch author profile',
-        500
-      );
+      console.error("Profile fetch error:", profileError);
+      return jsonError("INTERNAL_ERROR", "Failed to fetch author profile", 500);
     }
 
     // Count user's public recipes
     // @ts-ignore - Database types not yet generated from schema
     const { count: publicRecipeCount } = await locals.supabase
-      .from('recipes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', recipe.user_id)
-      .eq('is_public', true);
+      .from("recipes")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", recipe.user_id)
+      .eq("is_public", true);
 
     const author: PublicProfileDTO = {
       username: profile.username!,
@@ -153,45 +147,61 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
 
     // Step 4: Fetch recipe ingredients with details
     // @ts-ignore - Database types not yet generated from schema
-    const { data: recipeIngredients, error: ingredientsError } = await locals.supabase
-      .from('recipe_ingredients')
-      .select('*')
-      .eq('recipe_id', id)
-      .order('order_index', { ascending: true }) as { 
-        data: RecipeIngredientEntity[] | null; 
-        error: any 
+    const { data: recipeIngredients, error: ingredientsError } =
+      (await locals.supabase
+        .from("recipe_ingredients")
+        .select("*")
+        .eq("recipe_id", id)
+        .order("order_index", { ascending: true })) as {
+        data: RecipeIngredientEntity[] | null;
+        error: any;
       };
 
     if (ingredientsError) {
-      console.error('Ingredients fetch error:', ingredientsError);
+      console.error("Ingredients fetch error:", ingredientsError);
       return jsonError(
-        'INTERNAL_ERROR',
-        'Failed to fetch recipe ingredients',
-        500
+        "INTERNAL_ERROR",
+        "Failed to fetch recipe ingredients",
+        500,
       );
     }
 
     // Step 5: Fetch full ingredient details
-    const ingredientIds = (recipeIngredients || []).map((ri) => ri.ingredient_id);
+    const ingredientIds = (recipeIngredients || []).map(
+      (ri) => ri.ingredient_id,
+    );
 
     let fullIngredients: IngredientEntity[] = [];
 
     if (ingredientIds.length > 0) {
       // @ts-ignore - Database types not yet generated from schema
-      const { data, error: fullIngredientsError } = await locals.supabase
-        .from('ingredients')
-        .select('*')
-        .in('id', ingredientIds) as { data: IngredientEntity[] | null; error: any };
+      const { data, error: fullIngredientsError } = (await locals.supabase
+        .from("ingredients")
+        .select("*")
+        .in("id", ingredientIds)) as {
+        data: IngredientEntity[] | null;
+        error: any;
+      };
 
       if (fullIngredientsError) {
         // Anonymous requests may be blocked by RLS from reading `ingredients`. For public recipes,
         // return the recipe details without ingredient metadata rather than 500.
         if (!token && recipe.is_public) {
-          console.error('Anonymous ingredient lookup blocked for public recipe:', fullIngredientsError);
+          console.error(
+            "Anonymous ingredient lookup blocked for public recipe:",
+            fullIngredientsError,
+          );
           fullIngredients = [];
         } else {
-          console.error('Failed to fetch ingredient details:', fullIngredientsError);
-          return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
+          console.error(
+            "Failed to fetch ingredient details:",
+            fullIngredientsError,
+          );
+          return jsonError(
+            "INTERNAL_ERROR",
+            "Failed to fetch recipe ingredients",
+            500,
+          );
         }
       } else {
         fullIngredients = data ?? [];
@@ -202,7 +212,9 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
     const ingredientsWithDetails: RecipeIngredientWithDetails[] = [];
 
     for (const ri of recipeIngredients || []) {
-      const ingredient = fullIngredients?.find((ing) => ing.id === ri.ingredient_id);
+      const ingredient = fullIngredients?.find(
+        (ing) => ing.id === ri.ingredient_id,
+      );
 
       if (!ingredient) {
         // For public recipes viewed anonymously, ingredient details may be hidden by RLS.
@@ -218,8 +230,8 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
             notes: ri.notes,
             ingredient: {
               id: ri.ingredient_id,
-              name: 'unknown',
-              display_name: 'Unknown ingredient',
+              name: "unknown",
+              display_name: "Unknown ingredient",
               category: null,
               created_at: new Date(0).toISOString(),
             },
@@ -227,11 +239,15 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
           continue;
         }
 
-        console.error('Ingredient details missing for recipe:', {
+        console.error("Ingredient details missing for recipe:", {
           recipe_id: id,
           ingredient_id: ri.ingredient_id,
         });
-        return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
+        return jsonError(
+          "INTERNAL_ERROR",
+          "Failed to fetch recipe ingredients",
+          500,
+        );
       }
 
       ingredientsWithDetails.push({
@@ -256,22 +272,18 @@ export const GET: APIRoute = async ({ params, request, locals }) => {
     return new Response(JSON.stringify(recipeDTO), {
       status: 200,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   } catch (error) {
-    console.error('GET /api/recipes/:id unexpected error:', error);
-    return jsonError(
-      'INTERNAL_ERROR',
-      'An unexpected error occurred',
-      500
-    );
+    console.error("GET /api/recipes/:id unexpected error:", error);
+    return jsonError("INTERNAL_ERROR", "An unexpected error occurred", 500);
   }
 };
 
 /**
  * PUT /api/recipes/:id
- * 
+ *
  * Updates an existing recipe (owner only).
  * If ingredients array is provided, all existing ingredients are replaced.
  */
@@ -280,56 +292,46 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     const { id } = params;
 
     if (!id) {
-      return jsonError(
-        'VALIDATION_ERROR',
-        'Recipe ID is required',
-        400,
-        'id'
-      );
+      return jsonError("VALIDATION_ERROR", "Recipe ID is required", 400, "id");
     }
 
     // Step 1: Authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return jsonError(
-        'AUTHENTICATION_ERROR',
-        'Missing or invalid authorization header',
-        401
+        "AUTHENTICATION_ERROR",
+        "Missing or invalid authorization header",
+        401,
       );
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await locals.supabase.auth.getUser(token);
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: authError,
+    } = await locals.supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return jsonError(
-        'AUTHENTICATION_ERROR',
-        'Invalid or expired token',
-        401
-      );
+      return jsonError("AUTHENTICATION_ERROR", "Invalid or expired token", 401);
     }
 
     // Step 2: Verify recipe exists and ownership
     // @ts-ignore - Database types not yet generated from schema
-    const { data: existingRecipe, error: fetchError } = await locals.supabase
-      .from('recipes')
-      .select('*')
-      .eq('id', id)
-      .single() as { data: RecipeEntity | null; error: any };
+    const { data: existingRecipe, error: fetchError } = (await locals.supabase
+      .from("recipes")
+      .select("*")
+      .eq("id", id)
+      .single()) as { data: RecipeEntity | null; error: any };
 
     if (fetchError || !existingRecipe) {
-      return jsonError(
-        'NOT_FOUND',
-        'Recipe not found',
-        404
-      );
+      return jsonError("NOT_FOUND", "Recipe not found", 404);
     }
 
     if (existingRecipe.user_id !== user.id) {
       return jsonError(
-        'AUTHORIZATION_ERROR',
-        'You do not have permission to update this recipe',
-        403
+        "AUTHORIZATION_ERROR",
+        "You do not have permission to update this recipe",
+        403,
       );
     }
 
@@ -338,11 +340,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     try {
       body = await request.json();
     } catch {
-      return jsonError(
-        'VALIDATION_ERROR',
-        'Invalid JSON in request body',
-        400
-      );
+      return jsonError("VALIDATION_ERROR", "Invalid JSON in request body", 400);
     }
 
     const data = body as UpdateRecipeCommand;
@@ -352,10 +350,10 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       const trimmedTitle = data.title.trim();
       if (trimmedTitle.length === 0 || trimmedTitle.length > 200) {
         return jsonError(
-          'VALIDATION_ERROR',
-          'Title must be between 1 and 200 characters',
+          "VALIDATION_ERROR",
+          "Title must be between 1 and 200 characters",
           400,
-          'title'
+          "title",
         );
       }
     }
@@ -364,43 +362,43 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       const trimmedInstructions = data.instructions.trim();
       if (trimmedInstructions.length === 0) {
         return jsonError(
-          'VALIDATION_ERROR',
-          'Instructions cannot be empty',
+          "VALIDATION_ERROR",
+          "Instructions cannot be empty",
           400,
-          'instructions'
+          "instructions",
         );
       }
     }
 
     if (data.servings !== undefined) {
-      if (typeof data.servings !== 'number' || data.servings <= 0) {
+      if (typeof data.servings !== "number" || data.servings <= 0) {
         return jsonError(
-          'VALIDATION_ERROR',
-          'Servings must be a number greater than 0',
+          "VALIDATION_ERROR",
+          "Servings must be a number greater than 0",
           400,
-          'servings'
+          "servings",
         );
       }
     }
 
     if (data.prep_time !== undefined && data.prep_time !== null) {
-      if (typeof data.prep_time !== 'number' || data.prep_time < 0) {
+      if (typeof data.prep_time !== "number" || data.prep_time < 0) {
         return jsonError(
-          'VALIDATION_ERROR',
-          'Prep time must be a non-negative number',
+          "VALIDATION_ERROR",
+          "Prep time must be a non-negative number",
           400,
-          'prep_time'
+          "prep_time",
         );
       }
     }
 
     if (data.cook_time !== undefined && data.cook_time !== null) {
-      if (typeof data.cook_time !== 'number' || data.cook_time < 0) {
+      if (typeof data.cook_time !== "number" || data.cook_time < 0) {
         return jsonError(
-          'VALIDATION_ERROR',
-          'Cook time must be a non-negative number',
+          "VALIDATION_ERROR",
+          "Cook time must be a non-negative number",
           400,
-          'cook_time'
+          "cook_time",
         );
       }
     }
@@ -408,10 +406,10 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     if (data.description !== undefined && data.description !== null) {
       if (data.description.length > 250) {
         return jsonError(
-          'VALIDATION_ERROR',
-          'Description cannot exceed 250 characters',
+          "VALIDATION_ERROR",
+          "Description cannot exceed 250 characters",
           400,
-          'description'
+          "description",
         );
       }
     }
@@ -419,29 +417,28 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     // Step 5: Update recipe
     const recipeUpdate: any = {};
     if (data.title !== undefined) recipeUpdate.title = data.title.trim();
-    if (data.description !== undefined) recipeUpdate.description = data.description?.trim() || null;
-    if (data.instructions !== undefined) recipeUpdate.instructions = data.instructions.trim();
+    if (data.description !== undefined)
+      recipeUpdate.description = data.description?.trim() || null;
+    if (data.instructions !== undefined)
+      recipeUpdate.instructions = data.instructions.trim();
     if (data.servings !== undefined) recipeUpdate.servings = data.servings;
     if (data.prep_time !== undefined) recipeUpdate.prep_time = data.prep_time;
     if (data.cook_time !== undefined) recipeUpdate.cook_time = data.cook_time;
-    if (data.image_url !== undefined) recipeUpdate.image_url = data.image_url?.trim() || null;
+    if (data.image_url !== undefined)
+      recipeUpdate.image_url = data.image_url?.trim() || null;
     recipeUpdate.updated_at = new Date().toISOString();
 
     // @ts-ignore - Database types not yet generated from schema
-    const { data: updatedRecipe, error: updateError } = await locals.supabase
-      .from('recipes')
+    const { data: updatedRecipe, error: updateError } = (await locals.supabase
+      .from("recipes")
       .update(recipeUpdate)
-      .eq('id', id)
-      .select('*')
-      .single() as { data: RecipeEntity | null; error: any };
+      .eq("id", id)
+      .select("*")
+      .single()) as { data: RecipeEntity | null; error: any };
 
     if (updateError || !updatedRecipe) {
-      console.error('Recipe update error:', updateError);
-      return jsonError(
-        'INTERNAL_ERROR',
-        'Failed to update recipe',
-        500
-      );
+      console.error("Recipe update error:", updateError);
+      return jsonError("INTERNAL_ERROR", "Failed to update recipe", 500);
     }
 
     // Step 6: Handle ingredients update if provided
@@ -451,31 +448,34 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       // Validate ingredients array
       if (data.ingredients.length === 0) {
         return jsonError(
-          'VALIDATION_ERROR',
-          'Ingredients array cannot be empty',
+          "VALIDATION_ERROR",
+          "Ingredients array cannot be empty",
           400,
-          'ingredients'
+          "ingredients",
         );
       }
 
       // Delete existing recipe_ingredients
       // @ts-ignore - Database types not yet generated from schema
       const { error: deleteError } = await locals.supabase
-        .from('recipe_ingredients')
+        .from("recipe_ingredients")
         .delete()
-        .eq('recipe_id', id);
+        .eq("recipe_id", id);
 
       if (deleteError) {
-        console.error('Error deleting old ingredients:', deleteError);
+        console.error("Error deleting old ingredients:", deleteError);
         return jsonError(
-          'INTERNAL_ERROR',
-          'Failed to update recipe ingredients',
-          500
+          "INTERNAL_ERROR",
+          "Failed to update recipe ingredients",
+          500,
         );
       }
 
       // Upsert new ingredients (reuse logic from POST)
-      const resolvedIngredients: Array<{ id: string; input: RecipeIngredientInput }> = [];
+      const resolvedIngredients: Array<{
+        id: string;
+        input: RecipeIngredientInput;
+      }> = [];
 
       for (const input of data.ingredients) {
         const normalizedName = normalizeIngredientName(input.ingredient_name);
@@ -483,10 +483,21 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 
         let ingredient: IngredientEntity;
         try {
-          ingredient = await getOrCreateIngredient(locals.supabase, normalizedName, displayName);
+          ingredient = await getOrCreateIngredient(
+            locals.supabase,
+            normalizedName,
+            displayName,
+          );
         } catch (error) {
-          console.error(`Failed to resolve ingredient "${input.ingredient_name}":`, error);
-          return jsonError('INTERNAL_ERROR', 'Failed to process ingredients', 500);
+          console.error(
+            `Failed to resolve ingredient "${input.ingredient_name}":`,
+            error,
+          );
+          return jsonError(
+            "INTERNAL_ERROR",
+            "Failed to process ingredients",
+            500,
+          );
         }
 
         resolvedIngredients.push({
@@ -507,40 +518,53 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       }));
 
       // @ts-ignore - Database types not yet generated from schema
-      const { data: newRecipeIngredients, error: insertError } = await locals.supabase
-        .from('recipe_ingredients')
-        .insert(recipeIngredientsInsert)
-        .select('*') as { data: RecipeIngredientEntity[] | null; error: any };
+      const { data: newRecipeIngredients, error: insertError } =
+        (await locals.supabase
+          .from("recipe_ingredients")
+          .insert(recipeIngredientsInsert)
+          .select("*")) as {
+          data: RecipeIngredientEntity[] | null;
+          error: any;
+        };
 
       if (insertError || !newRecipeIngredients) {
-        console.error('Error inserting new ingredients:', insertError);
+        console.error("Error inserting new ingredients:", insertError);
         return jsonError(
-          'INTERNAL_ERROR',
-          'Failed to update recipe ingredients',
-          500
+          "INTERNAL_ERROR",
+          "Failed to update recipe ingredients",
+          500,
         );
       }
 
       // Fetch full ingredient details
       const ingredientIds = resolvedIngredients.map((r) => r.id);
-      
+
       // @ts-ignore - Database types not yet generated from schema
-      const { data: fullIngredients } = await locals.supabase
-        .from('ingredients')
-        .select('*')
-        .in('id', ingredientIds) as { data: IngredientEntity[] | null; error: any };
+      const { data: fullIngredients } = (await locals.supabase
+        .from("ingredients")
+        .select("*")
+        .in("id", ingredientIds)) as {
+        data: IngredientEntity[] | null;
+        error: any;
+      };
 
       ingredientsWithDetails = [];
 
       for (const ri of newRecipeIngredients) {
-        const ingredient = fullIngredients?.find((ing) => ing.id === ri.ingredient_id);
+        const ingredient = fullIngredients?.find(
+          (ing) => ing.id === ri.ingredient_id,
+        );
 
         if (!ingredient) {
-          console.error('Ingredient details missing after recipe update:', {
+          console.error("Ingredient details missing after recipe update:", {
             recipe_id: id,
             ingredient_id: ri.ingredient_id,
           });
-          return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
+          return jsonError(
+            "INTERNAL_ERROR",
+            "Failed to fetch recipe ingredients",
+            500,
+          );
         }
 
         ingredientsWithDetails.push({
@@ -557,35 +581,47 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     } else {
       // Fetch existing ingredients if not updating
       // @ts-ignore - Database types not yet generated from schema
-      const { data: existingIngredients } = await locals.supabase
-        .from('recipe_ingredients')
-        .select('*')
-        .eq('recipe_id', id)
-        .order('order_index', { ascending: true }) as { 
-          data: RecipeIngredientEntity[] | null; 
-          error: any 
-        };
+      const { data: existingIngredients } = (await locals.supabase
+        .from("recipe_ingredients")
+        .select("*")
+        .eq("recipe_id", id)
+        .order("order_index", { ascending: true })) as {
+        data: RecipeIngredientEntity[] | null;
+        error: any;
+      };
 
       if (existingIngredients && existingIngredients.length > 0) {
         const ingredientIds = existingIngredients.map((ri) => ri.ingredient_id);
-        
+
         // @ts-ignore - Database types not yet generated from schema
-        const { data: fullIngredients } = await locals.supabase
-          .from('ingredients')
-          .select('*')
-          .in('id', ingredientIds) as { data: IngredientEntity[] | null; error: any };
+        const { data: fullIngredients } = (await locals.supabase
+          .from("ingredients")
+          .select("*")
+          .in("id", ingredientIds)) as {
+          data: IngredientEntity[] | null;
+          error: any;
+        };
 
         ingredientsWithDetails = [];
 
         for (const ri of existingIngredients) {
-          const ingredient = fullIngredients?.find((ing) => ing.id === ri.ingredient_id);
+          const ingredient = fullIngredients?.find(
+            (ing) => ing.id === ri.ingredient_id,
+          );
 
           if (!ingredient) {
-            console.error('Ingredient details missing for existing recipe ingredients:', {
-              recipe_id: id,
-              ingredient_id: ri.ingredient_id,
-            });
-            return jsonError('INTERNAL_ERROR', 'Failed to fetch recipe ingredients', 500);
+            console.error(
+              "Ingredient details missing for existing recipe ingredients:",
+              {
+                recipe_id: id,
+                ingredient_id: ri.ingredient_id,
+              },
+            );
+            return jsonError(
+              "INTERNAL_ERROR",
+              "Failed to fetch recipe ingredients",
+              500,
+            );
           }
 
           ingredientsWithDetails.push({
@@ -604,21 +640,21 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 
     // Step 7: Fetch author profile
     // @ts-ignore - Database types not yet generated from schema
-    const { data: profile } = await locals.supabase
-      .from('profiles')
-      .select('username, display_name, avatar_url, created_at')
-      .eq('id', user.id)
-      .single() as { data: Partial<PublicProfileDTO> | null; error: any };
+    const { data: profile } = (await locals.supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url, created_at")
+      .eq("id", user.id)
+      .single()) as { data: Partial<PublicProfileDTO> | null; error: any };
 
     // @ts-ignore - Database types not yet generated from schema
     const { count: publicRecipeCount } = await locals.supabase
-      .from('recipes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('is_public', true);
+      .from("recipes")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("is_public", true);
 
     const author: PublicProfileDTO = {
-      username: profile?.username || '',
+      username: profile?.username || "",
       display_name: profile?.display_name ?? null,
       avatar_url: profile?.avatar_url ?? null,
       created_at: profile?.created_at || new Date().toISOString(),
@@ -635,22 +671,18 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     return new Response(JSON.stringify(recipeDTO), {
       status: 200,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   } catch (error) {
-    console.error('PUT /api/recipes/:id unexpected error:', error);
-    return jsonError(
-      'INTERNAL_ERROR',
-      'An unexpected error occurred',
-      500
-    );
+    console.error("PUT /api/recipes/:id unexpected error:", error);
+    return jsonError("INTERNAL_ERROR", "An unexpected error occurred", 500);
   }
 };
 
 /**
  * DELETE /api/recipes/:id
- * 
+ *
  * Deletes a recipe (owner only).
  * Cascade deletes all recipe_ingredients entries.
  */
@@ -659,63 +691,56 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
     const { id } = params;
 
     if (!id) {
-      return jsonError(
-        'VALIDATION_ERROR',
-        'Recipe ID is required',
-        400,
-        'id'
-      );
+      return jsonError("VALIDATION_ERROR", "Recipe ID is required", 400, "id");
     }
 
     // Step 1: Authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return jsonError(
-        'AUTHENTICATION_ERROR',
-        'Missing or invalid authorization header',
-        401
+        "AUTHENTICATION_ERROR",
+        "Missing or invalid authorization header",
+        401,
       );
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await locals.supabase.auth.getUser(token);
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: authError,
+    } = await locals.supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return jsonError(
-        'AUTHENTICATION_ERROR',
-        'Invalid or expired token',
-        401
-      );
+      return jsonError("AUTHENTICATION_ERROR", "Invalid or expired token", 401);
     }
 
     // Step 2: Verify recipe exists and ownership
     // @ts-ignore - Database types not yet generated from schema
-    const { data: existingRecipe, error: fetchError } = await locals.supabase
-      .from('recipes')
-      .select('*')
-      .eq('id', id)
-      .single() as { data: RecipeEntity | null; error: any };
+    const { data: existingRecipe, error: fetchError } = (await locals.supabase
+      .from("recipes")
+      .select("*")
+      .eq("id", id)
+      .single()) as { data: RecipeEntity | null; error: any };
 
     if (fetchError || !existingRecipe) {
-      return jsonError(
-        'NOT_FOUND',
-        'Recipe not found',
-        404
-      );
+      return jsonError("NOT_FOUND", "Recipe not found", 404);
     }
 
     if (existingRecipe.user_id !== user.id) {
       return jsonError(
-        'AUTHORIZATION_ERROR',
-        'You do not have permission to delete this recipe',
-        403
+        "AUTHORIZATION_ERROR",
+        "You do not have permission to delete this recipe",
+        403,
       );
     }
 
-    const bucket = import.meta.env.PUBLIC_SUPABASE_STORAGE_BUCKET || 'recipe-images';
+    const bucket =
+      import.meta.env.PUBLIC_SUPABASE_STORAGE_BUCKET || "recipe-images";
     const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 
-    const extractSupabasePublicObject = (value: string): { bucket: string; path: string } | null => {
+    const extractSupabasePublicObject = (
+      value: string,
+    ): { bucket: string; path: string } | null => {
       if (!supabaseUrl) return null;
 
       try {
@@ -724,22 +749,25 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
 
         if (parsed.host !== base.host) return null;
 
-        const marker = '/storage/v1/object/public/';
+        const marker = "/storage/v1/object/public/";
         const idx = parsed.pathname.indexOf(marker);
         if (idx === -1) return null;
 
         const remainder = parsed.pathname.slice(idx + marker.length);
-        const [bucketId, ...rest] = remainder.split('/');
-        const objectPath = rest.join('/');
+        const [bucketId, ...rest] = remainder.split("/");
+        const objectPath = rest.join("/");
         if (!bucketId || !objectPath) return null;
 
         return { bucket: bucketId, path: objectPath };
       } catch (error) {
-        console.error('Failed to parse Supabase storage URL in extractSupabasePublicObject', {
-          value,
-          supabaseUrl,
-          error,
-        });
+        console.error(
+          "Failed to parse Supabase storage URL in extractSupabasePublicObject",
+          {
+            value,
+            supabaseUrl,
+            error,
+          },
+        );
         return null;
       }
     };
@@ -768,7 +796,7 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
         if (!raw) continue;
         // Remove surrounding angle brackets if present: <url> → url
         // Use non-greedy pattern to avoid matching nested angle brackets
-        const clean = raw.replace(/^<([^<>]+)>$/, '$1');
+        const clean = raw.replace(/^<([^<>]+)>$/, "$1");
         urls.push(clean);
       }
       return urls;
@@ -776,14 +804,22 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
 
     const candidateUrls: string[] = [];
     if (existingRecipe.image_url) candidateUrls.push(existingRecipe.image_url);
-    if (existingRecipe.description) candidateUrls.push(...extractMarkdownImageUrls(existingRecipe.description));
-    if (existingRecipe.instructions) candidateUrls.push(...extractMarkdownImageUrls(existingRecipe.instructions));
+    if (existingRecipe.description)
+      candidateUrls.push(
+        ...extractMarkdownImageUrls(existingRecipe.description),
+      );
+    if (existingRecipe.instructions)
+      candidateUrls.push(
+        ...extractMarkdownImageUrls(existingRecipe.instructions),
+      );
 
     const objectPathsToDelete = Array.from(
       new Set(
         candidateUrls
           .map((url) => extractSupabasePublicObject(url))
-          .filter((parsed): parsed is { bucket: string; path: string } => Boolean(parsed))
+          .filter((parsed): parsed is { bucket: string; path: string } =>
+            Boolean(parsed),
+          )
           .filter((parsed) => parsed.bucket === bucket)
           .map((parsed) => parsed.path)
           .filter((path) => path.startsWith(`users/${user.id}/`)),
@@ -793,27 +829,29 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
     // Step 3: Delete recipe (cascade will handle recipe_ingredients)
     // @ts-ignore - Database types not yet generated from schema
     const { error: deleteError } = await locals.supabase
-      .from('recipes')
+      .from("recipes")
       .delete()
-      .eq('id', id);
+      .eq("id", id);
 
     if (deleteError) {
-      console.error('Recipe deletion error:', deleteError);
-      return jsonError(
-        'INTERNAL_ERROR',
-        'Failed to delete recipe',
-        500
-      );
+      console.error("Recipe deletion error:", deleteError);
+      return jsonError("INTERNAL_ERROR", "Failed to delete recipe", 500);
     }
 
     // Step 4: Return success response
-    let message = 'Recipe deleted successfully';
+    let message = "Recipe deleted successfully";
 
     if (objectPathsToDelete.length > 0) {
-      const { error: storageError } = await locals.supabase.storage.from(bucket).remove(objectPathsToDelete);
+      const { error: storageError } = await locals.supabase.storage
+        .from(bucket)
+        .remove(objectPathsToDelete);
       if (storageError) {
-        console.error('Recipe deleted, but failed to delete images from Storage:', storageError);
-        message = 'Recipe deleted, but failed to delete some associated images from Storage';
+        console.error(
+          "Recipe deleted, but failed to delete images from Storage:",
+          storageError,
+        );
+        message =
+          "Recipe deleted, but failed to delete some associated images from Storage";
       }
     }
 
@@ -825,15 +863,11 @@ export const DELETE: APIRoute = async ({ params, request, locals }) => {
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   } catch (error) {
-    console.error('DELETE /api/recipes/:id unexpected error:', error);
-    return jsonError(
-      'INTERNAL_ERROR',
-      'An unexpected error occurred',
-      500
-    );
+    console.error("DELETE /api/recipes/:id unexpected error:", error);
+    return jsonError("INTERNAL_ERROR", "An unexpected error occurred", 500);
   }
 };

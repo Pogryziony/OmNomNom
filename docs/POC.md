@@ -28,7 +28,7 @@ The POC de-risks the primary technical integration between our chosen frontend f
 ✅ **Authenticated Data Write**: Create new database records linked to authenticated user  
 ✅ **Authenticated Data Read**: Retrieve only the user's own records  
 ✅ **Row Level Security**: Verify users cannot access other users' data  
-✅ **Astro + React Integration**: Confirm React components work within Astro pages  
+✅ **Astro + React Integration**: Confirm React components work within Astro pages
 
 ### What the POC Will NOT Include
 
@@ -37,7 +37,7 @@ The POC de-risks the primary technical integration between our chosen frontend f
 ❌ Public recipe feed  
 ❌ Recipe editing or deletion  
 ❌ Production deployment  
-❌ Comprehensive error handling  
+❌ Comprehensive error handling
 
 ---
 
@@ -76,18 +76,18 @@ The POC de-risks the primary technical integration between our chosen frontend f
 
 4. Create basic file structure:
 
-   ``` md
+   ```md
    src/
    ├── components/
-   │   ├── AuthForm.tsx       # React component for login/signup
-   │   └── RecipeForm.tsx     # React component for creating recipe
+   │ ├── AuthForm.tsx # React component for login/signup
+   │ └── RecipeForm.tsx # React component for creating recipe
    ├── layouts/
-   │   └── Layout.astro       # Base layout
+   │ └── Layout.astro # Base layout
    ├── lib/
-   │   └── supabase.ts        # Supabase client configuration
+   │ └── supabase.ts # Supabase client configuration
    └── pages/
-       ├── index.astro        # Landing/login page
-       └── dashboard.astro    # Authenticated user dashboard
+   ├── index.astro # Landing/login page
+   └── dashboard.astro # Authenticated user dashboard
    ```
 
 **Success Criteria:**
@@ -184,10 +184,10 @@ The POC de-risks the primary technical integration between our chosen frontend f
    - Create `src/lib/supabase.ts`:
 
      ```typescript
-     import { createClient } from '@supabase/supabase-js';
+     import { createClient } from "@supabase/supabase-js";
 
-     const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || '';
-     const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
+     const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
+     const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || "";
 
      export const supabase = createClient(supabaseUrl, supabaseAnonKey);
      ```
@@ -201,7 +201,7 @@ The POC de-risks the primary technical integration between our chosen frontend f
        ```typescript
        // Sign up
        await supabase.auth.signUp({ email, password });
-       
+
        // Log in
        await supabase.auth.signInWithPassword({ email, password });
        ```
@@ -243,14 +243,16 @@ The POC de-risks the primary technical integration between our chosen frontend f
      - Use Supabase client to get current user:
 
        ```typescript
-       const { data: { user } } = await supabase.auth.getUser();
+       const {
+         data: { user },
+       } = await supabase.auth.getUser();
        ```
 
      - Insert recipe into database:
 
        ```typescript
        const { data, error } = await supabase
-         .from('recipes')
+         .from("recipes")
          .insert({ title: recipeTitle, user_id: user.id });
        ```
 
@@ -293,9 +295,9 @@ The POC de-risks the primary technical integration between our chosen frontend f
 
        ```typescript
        const { data: recipes, error } = await supabase
-         .from('recipes')
-         .select('*')
-         .order('created_at', { ascending: false });
+         .from("recipes")
+         .select("*")
+         .order("created_at", { ascending: false });
        ```
 
      - Display list of recipes with title and creation date
@@ -334,14 +336,14 @@ The POC de-risks the primary technical integration between our chosen frontend f
 
 ## POC Timeline
 
-| Step | Duration | Cumulative Time |
-|------|----------|-----------------|
-| 1. Initialize Astro Project | 2 hours | 2 hours |
-| 2. Set Up Supabase Project | 2 hours | 4 hours |
-| 3. Implement Authentication | 8 hours | 12 hours |
-| 4. Authenticated Data Write | 6 hours | 18 hours |
-| 5. Authenticated Data Read & RLS | 6 hours | 24 hours |
-| **Testing & Documentation** | 2 hours | **26 hours** |
+| Step                             | Duration | Cumulative Time |
+| -------------------------------- | -------- | --------------- |
+| 1. Initialize Astro Project      | 2 hours  | 2 hours         |
+| 2. Set Up Supabase Project       | 2 hours  | 4 hours         |
+| 3. Implement Authentication      | 8 hours  | 12 hours        |
+| 4. Authenticated Data Write      | 6 hours  | 18 hours        |
+| 5. Authenticated Data Read & RLS | 6 hours  | 24 hours        |
+| **Testing & Documentation**      | 2 hours  | **26 hours**    |
 
 **Total Estimated Time:** 2-3 days of focused development
 
@@ -357,7 +359,7 @@ The POC will be considered successful if:
 ✅ **Data Read:** Authenticated users can retrieve their own recipes  
 ✅ **Row Level Security:** Users cannot access other users' recipes (verified through testing)  
 ✅ **Astro + React Integration:** React components function correctly within Astro pages  
-✅ **TypeScript Compilation:** No type errors in codebase  
+✅ **TypeScript Compilation:** No type errors in codebase
 
 ---
 
@@ -389,13 +391,13 @@ At the end of the POC, the following will be available:
 
 ## Potential Risks & Mitigation
 
-| Risk | Mitigation Strategy |
-|------|---------------------|
+| Risk                                     | Mitigation Strategy                                                        |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
 | **RLS policies fail to restrict access** | Thoroughly test with multiple user accounts; review Supabase documentation |
-| **Session management issues** | Use Supabase SDK's built-in session handling; test across browser tabs |
-| **Astro + React hydration problems** | Use appropriate `client:*` directive; test component interactivity |
-| **TypeScript type errors with Supabase** | Use Supabase's TypeScript code generation; define custom types |
-| **Environment variable issues** | Validate `.env` loading; use `PUBLIC_` prefix for client-side variables |
+| **Session management issues**            | Use Supabase SDK's built-in session handling; test across browser tabs     |
+| **Astro + React hydration problems**     | Use appropriate `client:*` directive; test component interactivity         |
+| **TypeScript type errors with Supabase** | Use Supabase's TypeScript code generation; define custom types             |
+| **Environment variable issues**          | Validate `.env` loading; use `PUBLIC_` prefix for client-side variables    |
 
 ---
 

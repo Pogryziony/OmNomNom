@@ -1,7 +1,7 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: 'tests/e2e',
+  testDir: "tests/e2e",
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 2 : 0,
@@ -10,11 +10,11 @@ export default defineConfig({
     timeout: 10_000,
   },
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:4322',
+    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:4322",
     headless: true,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
   },
-  reporter: 'list'
+  reporter: "list",
 });

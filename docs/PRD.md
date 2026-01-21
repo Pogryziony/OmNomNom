@@ -182,7 +182,7 @@ Home cooks lack a dedicated space to discover authentic, user-tested recipes fro
 
 - Numeric quantities: Direct multiplication (e.g., 2 cups → 4 cups for 2x scaling)
 - Fractional quantities: Convert to decimal, scale, display as fraction or decimal based on result
-- Text-based quantities ("a pinch", "to taste"): Display unchanged with notation "*Not scaled"
+- Text-based quantities ("a pinch", "to taste"): Display unchanged with notation "\*Not scaled"
 - Rounding: Round to nearest common measurement (e.g., 1.33 cups → 1⅓ cups)
 
 **User Experience**

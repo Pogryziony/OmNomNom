@@ -29,16 +29,20 @@ interface SupabaseStubConfig {
 }
 
 type Filter<T> =
-  | { type: 'eq'; column: keyof T & string; value: unknown }
-  | { type: 'ilike'; column: keyof T & string; value: string }
-  | { type: 'in'; column: keyof T & string; value: unknown[] };
+  | { type: "eq"; column: keyof T & string; value: unknown }
+  | { type: "ilike"; column: keyof T & string; value: string }
+  | { type: "in"; column: keyof T & string; value: unknown[] };
 
 interface SelectOptions {
-  count?: 'exact';
+  count?: "exact";
   head?: boolean;
 }
 
-type SupabaseResponse<T> = { data: T[] | null; error: any; count: number | null };
+type SupabaseResponse<T> = {
+  data: T[] | null;
+  error: any;
+  count: number | null;
+};
 
 class QueryBuilder<T extends Record<string, any>> {
   private filters: Filter<T>[] = [];
@@ -47,7 +51,10 @@ class QueryBuilder<T extends Record<string, any>> {
   private rangeArgs?: { from: number; to: number };
   private selectOptions: SelectOptions = {};
 
-  constructor(private readonly rows: T[], private readonly error?: Error) {}
+  constructor(
+    private readonly rows: T[],
+    private readonly error?: Error,
+  ) {}
 
   select(_columns: string, options?: SelectOptions) {
     this.selectOptions = options ?? {};
@@ -55,17 +62,17 @@ class QueryBuilder<T extends Record<string, any>> {
   }
 
   eq(column: keyof T & string, value: unknown) {
-    this.filters.push({ type: 'eq', column, value });
+    this.filters.push({ type: "eq", column, value });
     return this;
   }
 
   ilike(column: keyof T & string, pattern: string) {
-    this.filters.push({ type: 'ilike', column, value: pattern });
+    this.filters.push({ type: "ilike", column, value: pattern });
     return this;
   }
 
   in(column: keyof T & string, values: unknown[]) {
-    this.filters.push({ type: 'in', column, value: values });
+    this.filters.push({ type: "in", column, value: values });
     return this;
   }
 
@@ -83,9 +90,9 @@ class QueryBuilder<T extends Record<string, any>> {
   async single() {
     try {
       const { data } = this.execute();
-      const first = Array.isArray(data) ? data[0] ?? null : null;
+      const first = Array.isArray(data) ? (data[0] ?? null) : null;
       if (!first) {
-        return { data: null, error: { message: 'No rows' } };
+        return { data: null, error: { message: "No rows" } };
       }
       return { data: first, error: null };
     } catch (error) {
@@ -94,8 +101,14 @@ class QueryBuilder<T extends Record<string, any>> {
   }
 
   then<TResult1 = any, TResult2 = never>(
-    onfulfilled?: ((value: SupabaseResponse<T>) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    onfulfilled?:
+      | ((value: SupabaseResponse<T>) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ) {
     try {
       const result = this.execute();
@@ -113,19 +126,25 @@ class QueryBuilder<T extends Record<string, any>> {
     let filtered = [...this.rows];
 
     for (const filter of this.filters) {
-      if (filter.type === 'eq') {
-        filtered = filtered.filter((row) => row[filter.column] === filter.value);
-      } else if (filter.type === 'ilike') {
-        const term = filter.value.replace(/%/g, '').toLowerCase();
-        filtered = filtered.filter((row) =>
-          String(row[filter.column] ?? '').toLowerCase().includes(term),
+      if (filter.type === "eq") {
+        filtered = filtered.filter(
+          (row) => row[filter.column] === filter.value,
         );
-      } else if (filter.type === 'in') {
+      } else if (filter.type === "ilike") {
+        const term = filter.value.replace(/%/g, "").toLowerCase();
+        filtered = filtered.filter((row) =>
+          String(row[filter.column] ?? "")
+            .toLowerCase()
+            .includes(term),
+        );
+      } else if (filter.type === "in") {
         const values = filter.value;
         if (!values.length) {
           filtered = [];
         } else {
-          filtered = filtered.filter((row) => values.includes(row[filter.column]));
+          filtered = filtered.filter((row) =>
+            values.includes(row[filter.column]),
+          );
         }
       }
     }
@@ -144,7 +163,7 @@ class QueryBuilder<T extends Record<string, any>> {
       });
     }
 
-    const total = this.selectOptions.count === 'exact' ? filtered.length : null;
+    const total = this.selectOptions.count === "exact" ? filtered.length : null;
 
     if (this.rangeArgs) {
       const { from, to } = this.rangeArgs;
@@ -162,13 +181,25 @@ class QueryBuilder<T extends Record<string, any>> {
 }
 
 class ProfilesQueryBuilder extends QueryBuilder<ProfileRow> {
-  constructor(rows: ProfileRow[], error?: Error, private readonly listError?: Error) {
+  constructor(
+    rows: ProfileRow[],
+    error?: Error,
+    private readonly listError?: Error,
+  ) {
     super(rows, error);
   }
 
   then<TResult1 = any, TResult2 = never>(
-    onfulfilled?: ((value: SupabaseResponse<ProfileRow>) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    onfulfilled?:
+      | ((
+          value: SupabaseResponse<ProfileRow>,
+        ) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ) {
     if (this.listError) {
       const result: SupabaseResponse<ProfileRow> = {
@@ -183,20 +214,28 @@ class ProfilesQueryBuilder extends QueryBuilder<ProfileRow> {
 }
 
 export interface SupabaseClientStub {
-  from: (table: 'recipes' | 'profiles') => QueryBuilder<RecipeRow> | ProfilesQueryBuilder;
+  from: (
+    table: "recipes" | "profiles",
+  ) => QueryBuilder<RecipeRow> | ProfilesQueryBuilder;
 }
 
-export const createSupabaseStub = (config: SupabaseStubConfig = {}): SupabaseClientStub => {
+export const createSupabaseStub = (
+  config: SupabaseStubConfig = {},
+): SupabaseClientStub => {
   const recipes = config.recipes ?? [];
   const profiles = config.profiles ?? [];
 
   return {
-    from(table: 'recipes' | 'profiles') {
-      if (table === 'recipes') {
+    from(table: "recipes" | "profiles") {
+      if (table === "recipes") {
         return new QueryBuilder(recipes, config.errors?.recipes);
       }
 
-      return new ProfilesQueryBuilder(profiles, undefined, config.errors?.profileList);
+      return new ProfilesQueryBuilder(
+        profiles,
+        undefined,
+        config.errors?.profileList,
+      );
     },
   };
 };

@@ -1,18 +1,23 @@
-import { defineConfig } from 'vitest/config';
-import path from 'node:path';
+import { defineConfig } from "vitest/config";
+import path from "node:path";
 
 export default defineConfig({
   test: {
-    environment: 'node',
+    environment: "node",
     globals: false,
-    exclude: ['**/node_modules/**', '**/dist/**', '**/.{git,cache,output,temp}/**', '**/tests/e2e/**'],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.{git,cache,output,temp}/**",
+      "**/tests/e2e/**",
+    ],
     coverage: {
-      reporter: ['text', 'lcov'],
+      reporter: ["text", "lcov"],
     },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
 });

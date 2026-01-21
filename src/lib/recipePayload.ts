@@ -1,4 +1,8 @@
-import type { CreateRecipeCommand, RecipeIngredientInput, RecipeDTO } from '@/types';
+import type {
+  CreateRecipeCommand,
+  RecipeIngredientInput,
+  RecipeDTO,
+} from "@/types";
 
 export interface IngredientRowInput {
   ingredient_name: string;
@@ -6,12 +10,14 @@ export interface IngredientRowInput {
   unit: string;
 }
 
-export function buildIngredientInputs(rows: IngredientRowInput[]): RecipeIngredientInput[] {
+export function buildIngredientInputs(
+  rows: IngredientRowInput[],
+): RecipeIngredientInput[] {
   const mapped = rows
     .map((row) => {
       const ingredientName = row.ingredient_name.trim();
       const unit = row.unit.trim();
-      const normalizedQuantity = row.quantity.trim().replace(',', '.');
+      const normalizedQuantity = row.quantity.trim().replace(",", ".");
       const quantity = Number.parseFloat(normalizedQuantity);
 
       return {
@@ -61,9 +67,9 @@ export function recipeDtoToFormValues(recipe: RecipeDTO): {
     title: recipe.title,
     instructions: recipe.instructions,
     servings: recipe.servings,
-    prep_time: recipe.prep_time === null ? '' : String(recipe.prep_time),
-    image_url: recipe.image_url ?? '',
-    description: recipe.description ?? '',
+    prep_time: recipe.prep_time === null ? "" : String(recipe.prep_time),
+    image_url: recipe.image_url ?? "",
+    description: recipe.description ?? "",
     ingredients: recipe.ingredients.map((ri) => ({
       ingredient_name: ri.ingredient.display_name,
       quantity: String(ri.quantity),

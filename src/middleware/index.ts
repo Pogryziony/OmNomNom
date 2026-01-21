@@ -1,15 +1,15 @@
-import { randomUUID } from 'node:crypto';
-import { defineMiddleware } from 'astro:middleware';
+import { randomUUID } from "node:crypto";
+import { defineMiddleware } from "astro:middleware";
 
-import { createSupabaseClient, supabaseClient } from '@/db/supabase.client';
-import { consumeRateLimit } from '@/lib/rateLimiter';
-import { logApiRequest, sanitizeHeaders } from '@/lib/logger';
+import { createSupabaseClient, supabaseClient } from "@/db/supabase.client";
+import { consumeRateLimit } from "@/lib/rateLimiter";
+import { logApiRequest, sanitizeHeaders } from "@/lib/logger";
 
 type MiddlewareContext = Parameters<ReturnType<typeof defineMiddleware>>[0];
 
 const AUTHENTICATED_LIMIT = 100;
 const ANONYMOUS_LIMIT = 20;
-const RATE_LIMIT_EXCLUDED_PATHS = new Set(['/api/docs', '/api/openapi.json']);
+const RATE_LIMIT_EXCLUDED_PATHS = new Set(["/api/docs", "/api/openapi.json"]);
 
 const extractBearerToken = (header?: string | null) => {
   if (!header) {
@@ -32,14 +32,14 @@ const resolveClientIp = (context: MiddlewareContext) => {
   try {
     return context.clientAddress;
   } catch {
-    return context.request.headers.get('x-forwarded-for') ?? undefined;
+    return context.request.headers.get("x-forwarded-for") ?? undefined;
   }
 };
 
 export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.supabase = supabaseClient;
 
-  if (!context.url.pathname.startsWith('/api/')) {
+  if (!context.url.pathname.startsWith("/api/")) {
     return next();
   }
 
@@ -52,7 +52,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const requestHeaders = sanitizeHeaders(context.request.headers);
   const clientIp = resolveClientIp(context);
 
-  const token = extractBearerToken(context.request.headers.get('authorization'));
+  const token = extractBearerToken(
+    context.request.headers.get("authorization"),
+  );
 
   // Ensure all downstream API handlers run Supabase queries under the JWT,
   // so Postgres RLS policies based on auth.uid() work for inserts/updates.
@@ -67,7 +69,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         authenticatedUserId = data.user.id;
       }
     } catch (error) {
-      console.warn('Rate limiter could not validate token:', error);
+      console.warn("Rate limiter could not validate token:", error);
     }
   }
 
@@ -75,18 +77,24 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const limit = isAuthenticated ? AUTHENTICATED_LIMIT : ANONYMOUS_LIMIT;
   const key = isAuthenticated
     ? `user:${authenticatedUserId}`
-    : `ip:${clientIp ?? 'unknown'}`;
+    : `ip:${clientIp ?? "unknown"}`;
 
   const rateLimitState = consumeRateLimit(key, limit);
 
   const applyRateLimitHeaders = (response: Response) => {
-    response.headers.set('X-RateLimit-Limit', rateLimitState.limit.toString());
-    response.headers.set('X-RateLimit-Remaining', rateLimitState.remaining.toString());
-    response.headers.set('X-RateLimit-Reset', rateLimitState.reset.toString());
+    response.headers.set("X-RateLimit-Limit", rateLimitState.limit.toString());
+    response.headers.set(
+      "X-RateLimit-Remaining",
+      rateLimitState.remaining.toString(),
+    );
+    response.headers.set("X-RateLimit-Reset", rateLimitState.reset.toString());
     return response;
   };
 
-  const finalizeResponse = (response: Response, extra?: { limited?: boolean; error?: string }) => {
+  const finalizeResponse = (
+    response: Response,
+    extra?: { limited?: boolean; error?: string },
+  ) => {
     const responseWithHeaders = applyRateLimitHeaders(response);
 
     logApiRequest({
@@ -101,7 +109,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
       responseHeaders: sanitizeHeaders(responseWithHeaders.headers),
       rateLimit: {
         limit,
-        remaining: Number(responseWithHeaders.headers.get('X-RateLimit-Remaining')) || rateLimitState.remaining,
+        remaining:
+          Number(responseWithHeaders.headers.get("X-RateLimit-Remaining")) ||
+          rateLimitState.remaining,
         reset: rateLimitState.reset,
         limited: Boolean(extra?.limited ?? rateLimitState.limited),
       },
@@ -117,16 +127,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const limitedResponse = new Response(
       JSON.stringify({
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many requests. Please try again later.',
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Too many requests. Please try again later.",
           retry_after: retryAfter,
         },
       }),
       {
         status: 429,
         headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': retryAfter.toString(),
+          "Content-Type": "application/json",
+          "Retry-After": retryAfter.toString(),
         },
       },
     );
@@ -154,7 +164,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         limited: false,
       },
       limited: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     });
 
     throw error;

@@ -1,5 +1,5 @@
-import { expect, type Page } from '@playwright/test';
-import { RecipeCard } from '../components/RecipeCard';
+import { expect, type Page } from "@playwright/test";
+import { RecipeCard } from "../components/RecipeCard";
 
 export class DashboardPage {
   readonly page: Page;
@@ -9,12 +9,14 @@ export class DashboardPage {
   }
 
   async expectLoaded() {
-    await expect(this.page.getByRole('heading', { name: 'My recipes' })).toBeVisible();
-    await expect(this.page.getByTestId('my-recipes-list')).toBeVisible();
+    await expect(
+      this.page.getByRole("heading", { name: "My recipes" }),
+    ).toBeVisible();
+    await expect(this.page.getByTestId("my-recipes-list")).toBeVisible();
   }
 
   async openNewRecipe() {
-    await this.page.getByRole('link', { name: 'New recipe' }).click();
+    await this.page.getByRole("link", { name: "New recipe" }).click();
   }
 
   recipeCard(recipeId: string) {

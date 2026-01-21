@@ -9,5 +9,5 @@ export function buildQueryString(params: Record<string, QueryValue>): string {
   }
 
   const qs = searchParams.toString();
-  return qs ? `?${qs}` : '';
+  return qs ? `?${qs}` : "";
 }

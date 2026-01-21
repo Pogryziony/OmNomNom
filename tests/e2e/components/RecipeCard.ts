@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export class RecipeCard {
   readonly page: Page;
@@ -10,7 +10,10 @@ export class RecipeCard {
   }
 
   static fromPublicFeed(page: Page, recipeId: string) {
-    return new RecipeCard(page, page.getByTestId(`public-recipe-card-${recipeId}`));
+    return new RecipeCard(
+      page,
+      page.getByTestId(`public-recipe-card-${recipeId}`),
+    );
   }
 
   static fromDashboard(page: Page, recipeId: string) {
@@ -26,6 +29,6 @@ export class RecipeCard {
   }
 
   async open() {
-    await this.card.getByRole('link').first().click();
+    await this.card.getByRole("link").first().click();
   }
 }

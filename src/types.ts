@@ -1,10 +1,10 @@
 /**
  * Type Definitions for OmNomNom Recipe Management Application
- * 
+ *
  * This file contains all DTO (Data Transfer Object) and Command Model types
  * used by the API. Types are derived from database entity definitions and
  * follow the API plan specifications.
- * 
+ *
  * @see .ai/api-plan.md - API endpoint specifications
  * @see .ai/db-plan.md - Database schema definitions
  */
@@ -179,7 +179,7 @@ export type ProfileDTO = ProfileEntity;
  * Endpoint: PATCH /api/profiles/me
  */
 export type UpdateProfileCommand = Partial<
-  Pick<ProfileEntity, 'username' | 'display_name' | 'bio' | 'avatar_url'>
+  Pick<ProfileEntity, "username" | "display_name" | "bio" | "avatar_url">
 >;
 
 /**
@@ -216,7 +216,7 @@ export interface RecipeIngredientInput {
  * Used in RecipeDTO responses
  */
 export interface RecipeIngredientWithDetails
-  extends Omit<RecipeIngredientEntity, 'ingredient_id'> {
+  extends Omit<RecipeIngredientEntity, "ingredient_id"> {
   ingredient: IngredientEntity;
 }
 
@@ -250,7 +250,7 @@ export interface RecipeDTO extends RecipeEntity {
  */
 export type RecipeListItemDTO = Omit<
   RecipeEntity,
-  'instructions' | 'description' | 'user_id'
+  "instructions" | "description" | "user_id"
 >;
 
 /**
@@ -430,7 +430,7 @@ export interface PaginationParams {
   page?: number; // default 1
   limit?: number; // default 20, max 100
   sort?: string; // sort field (e.g., "created_at", "title")
-  order?: 'asc' | 'desc'; // default "desc"
+  order?: "asc" | "desc"; // default "desc"
   search?: string; // optional search query
 }
 
@@ -462,13 +462,13 @@ export interface PaginatedResponse<T> {
  * API error codes
  */
 export type ApiErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'AUTHENTICATION_ERROR'
-  | 'AUTHORIZATION_ERROR'
-  | 'NOT_FOUND'
-  | 'CONFLICT'
-  | 'RATE_LIMIT_EXCEEDED'
-  | 'INTERNAL_ERROR';
+  | "VALIDATION_ERROR"
+  | "AUTHENTICATION_ERROR"
+  | "AUTHORIZATION_ERROR"
+  | "NOT_FOUND"
+  | "CONFLICT"
+  | "RATE_LIMIT_EXCEEDED"
+  | "INTERNAL_ERROR";
 
 /**
  * API error object
@@ -507,10 +507,10 @@ export interface RateLimitErrorResponse extends ApiErrorResponse {
  */
 export function isApiError(response: unknown): response is ApiErrorResponse {
   return (
-    typeof response === 'object' &&
+    typeof response === "object" &&
     response !== null &&
-    'error' in response &&
-    typeof (response as ApiErrorResponse).error === 'object'
+    "error" in response &&
+    typeof (response as ApiErrorResponse).error === "object"
   );
 }
 
@@ -518,11 +518,11 @@ export function isApiError(response: unknown): response is ApiErrorResponse {
  * Type guard to check if error is rate limit exceeded
  */
 export function isRateLimitError(
-  response: unknown
+  response: unknown,
 ): response is RateLimitErrorResponse {
   return (
     isApiError(response) &&
-    response.error.code === 'RATE_LIMIT_EXCEEDED' &&
-    'retry_after' in response.error
+    response.error.code === "RATE_LIMIT_EXCEEDED" &&
+    "retry_after" in response.error
   );
 }

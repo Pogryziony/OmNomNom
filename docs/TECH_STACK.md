@@ -206,16 +206,13 @@ npx shadcn@latest add form
 - **Database:** PostgreSQL database for all persistent data storage
   - Stores user accounts, recipes, shopping lists
   - Relational data model with foreign key constraints
-  
 - **Authentication:** User authentication and session management
   - Email/password authentication
   - JWT token-based sessions
   - Secure password hashing
-  
 - **Authorization:** Row Level Security (RLS) for data access control
   - Ensures users can only access their own private recipes
   - Policy-based security at database level
-  
 - **API:** Auto-generated RESTful API and real-time subscriptions
   - Type-safe client library for data operations
   - Real-time listeners for collaborative features (future)
@@ -239,13 +236,13 @@ npx shadcn@latest add form
 **Usage Patterns:**
 
 ```typescript
-import { supabase } from '@/lib/supabase';
+import { supabase } from "@/lib/supabase";
 
 // Query recipes for authenticated user
 const { data, error } = await supabase
-  .from('recipes')
-  .select('*')
-  .eq('user_id', userId);
+  .from("recipes")
+  .select("*")
+  .eq("user_id", userId);
 ```
 
 ---
@@ -321,15 +318,15 @@ const { data, error } = await supabase
 
 ## Technology Version Requirements
 
-| Technology | Minimum Version | Current Version |
-|------------|----------------|-----------------|
-| Node.js | 20.21.0 | 20.21.0 |
-| npm | 10.x | 10.x |
-| Astro | 5.0 | 5.15.1 |
-| React | 19.0 | 19.2.0 |
-| TypeScript | 5.0 | 5.9.3 |
-| Tailwind CSS | 4.0 | 4.1.16 |
-| Supabase JS Client | 2.x | 2.76.1 |
+| Technology         | Minimum Version | Current Version |
+| ------------------ | --------------- | --------------- |
+| Node.js            | 20.21.0         | 20.21.0         |
+| npm                | 10.x            | 10.x            |
+| Astro              | 5.0             | 5.15.1          |
+| React              | 19.0            | 19.2.0          |
+| TypeScript         | 5.0             | 5.9.3           |
+| Tailwind CSS       | 4.0             | 4.1.16          |
+| Supabase JS Client | 2.x             | 2.76.1          |
 
 ---
 
