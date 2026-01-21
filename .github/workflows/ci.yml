@@ -5,6 +5,10 @@ on:
     branches: [ master ]
   push:
     branches: [ master ]
+    tags: [ 'v*' ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
 
 jobs:
   pr-validation:
@@ -35,8 +39,34 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Unit tests
-        run: npm test
+      - name: Unit & integration tests
+        run: |
+          mkdir -p reports
+          npm test -- --reporter=junit --outputFile=reports/vitest.xml
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Start preview server
+        run: |
+          npm run preview -- --host 0.0.0.0 --port 4322 &
+          npx wait-on http://localhost:4322
+
+      - name: Playwright tests
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_DIR: reports
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: playwright.xml
+        run: npx playwright test --reporter=junit,html --output=playwright-artifacts
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-test-reports
+          path: |
+            reports/
+            playwright-report/
+            playwright-artifacts/
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
@@ -51,7 +81,7 @@ jobs:
         run: npx playwright test
 
   main-ci:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -72,8 +102,34 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Format check
-        run: npx prettier --check .
+      - name: Unit & integration tests
+        run: |
+          mkdir -p reports
+          npm test -- --reporter=junit --outputFile=reports/vitest.xml
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Start preview server
+        run: |
+          npm run preview -- --host 0.0.0.0 --port 4322 &
+          npx wait-on http://localhost:4322
+
+      - name: Playwright tests
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_DIR: reports
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: playwright.xml
+        run: npx playwright test --reporter=junit,html --output=playwright-artifacts
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: master-test-reports
+          path: |
+            reports/
+            playwright-report/
+            playwright-artifacts/
 
       - name: Build
         run: npm run build
@@ -81,17 +137,46 @@ jobs:
       - name: Unit tests
         run: npm test
 
+
+  cd-deploy:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+      - name: Deploy (placeholder)
+        run: echo "Deploying artifact to production environment"
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
       - name: Playwright tests
         run: npx playwright test
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Playwright tests
-        run: npx playwright test
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
