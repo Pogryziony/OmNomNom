@@ -5,6 +5,10 @@ on:
     branches: [ master ]
   push:
     branches: [ master ]
+    tags: [ 'v*' ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
 
 jobs:
   pr-validation:
@@ -12,6 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -22,6 +31,33 @@ jobs:
         with:
           node-version: 20.x
           cache: 'npm'
+
+      - name: Validate required environment variables
+        shell: bash
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          required_vars=(PUBLIC_SUPABASE_URL PUBLIC_SUPABASE_ANON_KEY)
+          for attempt in {1..3}; do
+            missing=()
+            for var in "${required_vars[@]}"; do
+              if [ -z "${!var}" ]; then
+                missing+=("$var")
+              fi
+            done
+            if [ ${#missing[@]} -eq 0 ]; then
+              echo "All required environment variables are set."
+              exit 0
+            fi
+            echo "Missing required env vars: ${missing[*]}"
+            if [ "$attempt" -lt 3 ]; then
+              echo "Retrying in 5 seconds... ($attempt/3)"
+              sleep 5
+            fi
+          done
+          echo "Required environment variables are still missing after 3 attempts."
+          exit 1
 
       - name: Install dependencies
         run: npm ci
@@ -35,14 +71,45 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Unit tests
-        run: npm test
+      - name: Unit & integration tests
+        run: |
+          mkdir -p reports
+          npm test -- --reporter=junit --outputFile=reports/vitest.xml
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Start preview server
+        run: |
+          npm run preview -- --host 0.0.0.0 --port 4322 &
+          npx wait-on http://localhost:4322
+
+      - name: Playwright tests
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_DIR: reports
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: playwright.xml
+        run: npx playwright test --reporter=junit,html --output=playwright-artifacts
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-test-reports
+          path: |
+            reports/
+            playwright-report/
+            playwright-artifacts/
 
   main-ci:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -66,8 +133,34 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Unit tests
-        run: npm test
+      - name: Unit & integration tests
+        run: |
+          mkdir -p reports
+          npm test -- --reporter=junit --outputFile=reports/vitest.xml
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Start preview server
+        run: |
+          npm run preview -- --host 0.0.0.0 --port 4322 &
+          npx wait-on http://localhost:4322
+
+      - name: Playwright tests
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_DIR: reports
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: playwright.xml
+        run: npx playwright test --reporter=junit,html --output=playwright-artifacts
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: master-test-reports
+          path: |
+            reports/
+            playwright-report/
+            playwright-artifacts/
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -76,46 +169,37 @@ jobs:
           path: dist/
           retention-days: 7
 
-  staging-deploy:
-    if: github.event_name == 'push'
+
+  cd-deploy:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
     runs-on: ubuntu-latest
-    needs: main-ci
-    environment:
-      name: staging
-    permissions:
-      contents: read
-
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Deploy to staging
-        run: echo "Deploying artifact to staging environment"
-
-      - name: Smoke checks
-        run: echo "Smoke checks passed"
-
-  production-deploy:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    needs: staging-deploy
     environment:
       name: production
     permissions:
       contents: read
 
     steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
+          retention-days: 7
 
-      - name: Deploy to production
+      - name: Deploy (placeholder)
         run: echo "Deploying artifact to production environment"
-
-      - name: Post-deploy verification
-        run: echo "Post-deploy verification passed"
