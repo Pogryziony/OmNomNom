@@ -4,80 +4,64 @@ A modern recipe management application built with cutting-edge technologies.
 
 ## 🚀 Technology Stack
 
-- **Frontend**: Astro 5 (for fast, content-driven pages) with React 19 (for interactive components)
-- **Language**: TypeScript 5 (for static typing)
-- **Styling**: Tailwind CSS 4 (for utility-first CSS)
-- **UI Components**: Shadcn/ui (for accessible, pre-built React components)
-- **Backend (BaaS)**: Supabase (PostgreSQL database, authentication, and BaaS)
-- **CI/CD**: GitHub Actions (for building and testing)
+- **Frontend**: Astro 5 + React 19 (hybrid pages and interactive components)
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS 4
+- **UI Components**: Shadcn/ui + Radix UI primitives
+- **Backend (BaaS)**: Supabase (PostgreSQL, Auth, Storage)
+- **Testing**: Vitest (unit/integration), Playwright (E2E)
+- **CI/CD**: GitHub Actions
 
 ## 📋 Prerequisites
 
 - Node.js 20.x or higher
 - npm 10.x or higher
-- A Supabase account (for backend services)
+- Supabase account (or Supabase CLI for local dev)
 
 ## 🛠️ Setup Instructions
 
-1. **Clone the repository**
+1. Clone the repository and install dependencies.
+2. Copy .env.example to .env and set required variables.
+3. Run the development server with npm run dev.
 
-   ```bash
-   git clone https://github.com/Pogryziony/OmNomNom.git
-   cd OmNomNom
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Configure Supabase**
-   - Create a new project at [supabase.com](https://supabase.com)
-   - Copy `.env.example` to `.env`
-   - Fill in your Supabase credentials:
-
-     ```bash
-     cp .env.example .env
-     ```
-
-   - Update the values in `.env` with your Supabase URL and anon key
-
-4. **Run the development server**
-
-   ```bash
-   npm run dev
-   ```
-
-   The application will be available at `http://localhost:4321`
+The app runs at http://localhost:4321.
 
 ## 📝 Available Scripts
 
-- `npm run dev` - Start the development server
-- `npm run build` - Build the project for production
-- `npm run preview` - Preview the production build locally
-- `npm run astro` - Run Astro CLI commands
+- `npm run dev` - Start the dev server
+- `npm run dev:local` - Start dev server on 127.0.0.1:4321
+- `npm run build` - Build for production
+- `npm run build:dev` - Build and run in dev mode
+- `npm run build:preview` - Build and preview on port 4322
+- `npm run preview` - Preview the production build
+- `npm run test` - Run unit/integration tests (Vitest)
+- `npm run test:e2e` - Run Playwright E2E tests
+- `npm run test:e2e:ui` - Run Playwright with UI mode
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix lint issues
+- `npm run format` - Format with Prettier
+- `npm run astro` - Astro CLI
 
 ## 🏗️ Project Structure
 
-```md
 /
-├── public/ # Static assets
+├── .github/              # CI workflows and config
+├── docs/                 # Product, tech, and API docs
+├── public/               # Static assets
+├── scripts/              # Build tooling
 ├── src/
-│ ├── components/ # React components
-│ ├── layouts/ # Astro layouts
-│ ├── lib/ # Utility functions and configurations
-│ ├── pages/ # Astro pages (file-based routing)
-│ └── styles/ # Global styles
-├── supabase/
-│ └── migrations/ # Supabase migration files
-├── .github/
-│ ├── workflows/ # GitHub Actions CI/CD
-│ └── config.toml # Supabase config
-├── astro.config.mjs # Astro configuration
-├── tsconfig.json # TypeScript configuration
-└── package.json # Project dependencies
-```
+│   ├── components/       # React components
+│   ├── db/               # Supabase client/types
+│   ├── layouts/          # Astro layouts
+│   ├── lib/              # Shared utilities
+│   ├── middleware/       # Astro middleware
+│   ├── pages/            # Astro routes
+│   └── styles/           # Global styles
+├── supabase/             # Supabase config and migrations
+├── tests/                # Unit and E2E tests
+├── astro.config.mjs       # Astro config
+├── tsconfig.json          # TypeScript config
+└── package.json           # Project scripts and deps
 
 ## 🎨 Adding Shadcn/ui Components
 
@@ -99,23 +83,29 @@ To add Shadcn/ui components to your project:
 
 ## 🔐 Environment Variables
 
-The following environment variables are required:
+Required:
+- `PUBLIC_SUPABASE_URL`
+- `PUBLIC_SUPABASE_ANON_KEY`
 
-- `PUBLIC_SUPABASE_URL` - Your Supabase project URL
-- `PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+Optional (local/dev):
+- `NODE_ENV`
+- `PUBLIC_APP_URL`
+- `DEBUG`
+- `USE_LOCAL_SUPABASE`
 
-See `.env.example` for a template.
+Optional for e2e tests - without these, e2e tests will fail:
+- `E2E_USER_EMAIL`
+- `E2E_USER_PASSWORD`
+
+You can remove the e2e step in pipeline if not planning to use them.
+
+See .env.example for the full template.
 
 ## 🚢 Deployment
 
-The project includes a GitHub Actions workflow that automatically builds and tests the application on every push to `master` branch.
+CI builds and tests on every push to master and on pull requests. Production builds are output to dist/.
 
-For deployment, you can use various platforms:
-
-- **Vercel**: Connect your GitHub repository
-- **Netlify**: Connect your GitHub repository
-- **Cloudflare Pages**: Connect your GitHub repository
-- **Custom server**: Use the built files from the `dist/` directory
+Deploy with any Astro-compatible host (Vercel, Netlify, Cloudflare Pages, or a custom server) using the dist/ output.
 
 ## 🤝 Contributing
 
