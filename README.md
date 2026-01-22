@@ -42,27 +42,6 @@ The app runs at http://localhost:4321.
 - `npm run format` - Format with Prettier
 - `npm run astro` - Astro CLI
 
-## 🏗️ Project Structure
-
-/
-├── .github/ # CI workflows and config
-├── docs/ # Product, tech, and API docs
-├── public/ # Static assets
-├── scripts/ # Build tooling
-├── src/
-│ ├── components/ # React components
-│ ├── db/ # Supabase client/types
-│ ├── layouts/ # Astro layouts
-│ ├── lib/ # Shared utilities
-│ ├── middleware/ # Astro middleware
-│ ├── pages/ # Astro routes
-│ └── styles/ # Global styles
-├── supabase/ # Supabase config and migrations
-├── tests/ # Unit and E2E tests
-├── astro.config.mjs # Astro config
-├── tsconfig.json # TypeScript config
-└── package.json # Project scripts and deps
-
 ## 🎨 Adding Shadcn/ui Components
 
 To add Shadcn/ui components to your project:
