@@ -45,23 +45,23 @@ The app runs at http://localhost:4321.
 ## 🏗️ Project Structure
 
 /
-├── .github/              # CI workflows and config
-├── docs/                 # Product, tech, and API docs
-├── public/               # Static assets
-├── scripts/              # Build tooling
+├── .github/ # CI workflows and config
+├── docs/ # Product, tech, and API docs
+├── public/ # Static assets
+├── scripts/ # Build tooling
 ├── src/
-│   ├── components/       # React components
-│   ├── db/               # Supabase client/types
-│   ├── layouts/          # Astro layouts
-│   ├── lib/              # Shared utilities
-│   ├── middleware/       # Astro middleware
-│   ├── pages/            # Astro routes
-│   └── styles/           # Global styles
-├── supabase/             # Supabase config and migrations
-├── tests/                # Unit and E2E tests
-├── astro.config.mjs       # Astro config
-├── tsconfig.json          # TypeScript config
-└── package.json           # Project scripts and deps
+│ ├── components/ # React components
+│ ├── db/ # Supabase client/types
+│ ├── layouts/ # Astro layouts
+│ ├── lib/ # Shared utilities
+│ ├── middleware/ # Astro middleware
+│ ├── pages/ # Astro routes
+│ └── styles/ # Global styles
+├── supabase/ # Supabase config and migrations
+├── tests/ # Unit and E2E tests
+├── astro.config.mjs # Astro config
+├── tsconfig.json # TypeScript config
+└── package.json # Project scripts and deps
 
 ## 🎨 Adding Shadcn/ui Components
 
@@ -84,16 +84,19 @@ To add Shadcn/ui components to your project:
 ## 🔐 Environment Variables
 
 Required:
+
 - `PUBLIC_SUPABASE_URL`
 - `PUBLIC_SUPABASE_ANON_KEY`
 
 Optional (local/dev):
+
 - `NODE_ENV`
 - `PUBLIC_APP_URL`
 - `DEBUG`
 - `USE_LOCAL_SUPABASE`
 
 Optional for e2e tests - without these, e2e tests will fail:
+
 - `E2E_USER_EMAIL`
 - `E2E_USER_PASSWORD`
 
